@@ -1,16 +1,10 @@
 from fastapi import FastAPI
-from routers.book import bookroute
-import uvicorn
+from database import Base, engine
+from schema import graphql_app
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Сначала определяем все роуты
-@app.get("/")
-def root():
-    return {"message": "Hello World"}
-
-# Затем подключаем другие роутеры
-app.include_router(bookroute, prefix="/book")
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host='127.0.0.1', port=8000, reload=True)
+# GraphQL доступен на /graphql
+app.include_router(graphql_app, prefix="/graphql")
