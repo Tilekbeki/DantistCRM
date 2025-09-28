@@ -28,3 +28,17 @@
 
 `fastapi dev main.py`запускает ее
 
+[схема бд](https://drawsql.app/teams/nurzhigit/diagrams/gippokrat)
+
+
+схема для создания сущности
+```
+
+mutation {
+  createUser(name: "Тилекбек Ташбаев", email: "example.com") {
+    id
+    name
+    email
+  }
+}
+```
