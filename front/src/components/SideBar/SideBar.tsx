@@ -9,7 +9,6 @@ import { Layout, Menu} from 'antd';
 
 const { Sider } = Layout;
 
-type MenuItem = Required<MenuProps>['items'][number];
 
 
 
