@@ -1,12 +1,6 @@
 import React from 'react';
 import {
-  AppstoreOutlined,
-  ContainerOutlined,
   CreditCardOutlined,
-  DesktopOutlined,
-  
-  MailOutlined,
-  PieChartOutlined,
   ScheduleOutlined,
   UsergroupAddOutlined,
   UserOutlined,
