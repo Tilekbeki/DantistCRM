@@ -4,10 +4,13 @@ import {
   MenuUnfoldOutlined,AntDesignOutlined
 } from '@ant-design/icons';
 import { Button, Layout, theme, ConfigProvider  } from 'antd';
-
+import { Provider } from 'react-redux';
+import { store } from './store';
 import { createStyles } from 'antd-style';
 import SideBar from './components/SideBar';
 const { Header, Content } = Layout;
+
+import PatientsList from './components/Patients';
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
   linearGradientButton: css`
@@ -43,7 +46,8 @@ const App: React.FC = () => {
 
   return (
     <Layout>
-      <SideBar isCollapsed={collapsed}/>
+      <Provider store={store}>
+         <SideBar isCollapsed={collapsed}/>
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }}>
 
@@ -76,9 +80,11 @@ const App: React.FC = () => {
             borderRadius: borderRadiusLG,
           }}
         >
-          Content
+          <PatientsList/>
         </Content>
       </Layout>
+      </Provider>
+     
     </Layout>
   );
 };

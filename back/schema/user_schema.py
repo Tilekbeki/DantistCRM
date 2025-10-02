@@ -42,4 +42,4 @@ class Mutation:
         return user
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)
-graphql_app = GraphQLRouter(schema)
+user_graphql_app = GraphQLRouter(schema)
