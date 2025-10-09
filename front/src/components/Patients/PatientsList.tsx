@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchPatients } from '../../store/slices/patientSlice';
-import type { StepsProps } from 'antd';
-import { Avatar, List, Steps, Tag, Space, Typography } from 'antd';
+import { Avatar, List, Tag, Space, Typography } from 'antd';
 import { UserOutlined, PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -34,22 +33,7 @@ const PatientsList: React.FC = () => {
       description: 'Курс лечения завершен',
     },
   ];
-
-  // Функция для определения текущего шага на основе статуса
-  const getCurrentStep = (patient: any) => {
-    switch (patient.status) {
-      case 'new':
-        return 0;
-      case 'examined':
-        return 1;
-      case 'treatment':
-        return 2;
-      case 'recovered':
-        return 3;
-      default:
-        return 0;
-    }
-  };
+  
 
   // Функция для получения цвета статуса
   const getStatusColor = (status: string) => {
@@ -164,17 +148,6 @@ const PatientsList: React.FC = () => {
               }
             />
             
-            <div style={{ minWidth: '300px' }}>
-              <Steps
-                direction="vertical"
-                size="small"
-                current={getCurrentStep(patient)}
-                items={stepItems.map((item, idx) => ({
-                  ...item,
-                  status: idx <= getCurrentStep(patient) ? 'finish' : 'wait'
-                }))}
-              />
-            </div>
           </List.Item>
         )}
       />

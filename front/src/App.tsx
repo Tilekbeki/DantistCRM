@@ -4,13 +4,15 @@ import {
   MenuUnfoldOutlined,AntDesignOutlined
 } from '@ant-design/icons';
 import { Button, Layout, theme, ConfigProvider  } from 'antd';
-import { Provider } from 'react-redux';
-import { store } from './store';
+
 import { createStyles } from 'antd-style';
 import SideBar from './components/SideBar';
-const { Header, Content } = Layout;
+const { Content } = Layout;
+import { BrowserRouter as Router, Routes,Route } from 'react-router-dom';
 
 import PatientsList from './components/Patients';
+import { useAppSelector } from './store/hooks';
+import CurrentPage from './pages/CurrentPage';
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
   linearGradientButton: css`
@@ -37,55 +39,21 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 }));
 
 const App: React.FC = () => {
+  const { currentPage } = useAppSelector((state) => state.pages);
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  console.log(currentPage)
 
    const { styles } = useStyle();
 
   return (
-    <Layout>
-      <Provider store={store}>
-         <SideBar isCollapsed={collapsed}/>
-      <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }}>
-
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: '16px',
-              width: 64,
-              height: 64,
-            }}
-          />
-            <ConfigProvider
-        button={{
-          className: styles.linearGradientButton,
-        }}
-      >
-        <Button type="primary" size="large" icon={<AntDesignOutlined />}>
-        Добавить пациента
-        </Button>
-      </ConfigProvider>
-        </Header>
-        <Content
-          style={{
-            margin: '24px 16px',
-            padding: 24,
-            minHeight: 280,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
-        >
-          <PatientsList/>
-        </Content>
-      </Layout>
-      </Provider>
-     
+    <Layout style={{ minHeight: '100vh' }}>
+      <SideBar isCollapsed={false} />
+      <CurrentPage/>
     </Layout>
+   
   );
 };
 
