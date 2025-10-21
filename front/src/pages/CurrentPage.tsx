@@ -1,8 +1,7 @@
 import { Layout, theme } from 'antd';
-import SideBar from '../components/SideBar';
 import { useAppSelector } from '../store/hooks';
-import PatientsPage from './PatientsPage';
-import HomePage from './HomePage';
+
+import {HomePage, PatientsPage, PersonalPage, SchedulePage, AppintmentsPage} from './index';
 
 const { Content } = Layout;
 
@@ -18,6 +17,12 @@ const CurrentPage: React.FC = () => {
         return <PatientsPage />;
       case 'homePage':
         return <HomePage />;
+      case 'SchedulePage':
+        return <SchedulePage/>
+      case 'PersonalPage':
+        return <PersonalPage/>
+      case 'AppintmentsPage':
+        return <AppintmentsPage/>
       default:
         return <HomePage />;
     }

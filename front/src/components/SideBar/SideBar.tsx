@@ -1,9 +1,11 @@
 import {
-  CreditCardOutlined,
+  UnorderedListOutlined,
   ScheduleOutlined,
   UsergroupAddOutlined,
   AppstoreOutlined,
   UserOutlined,
+  IdcardOutlined,
+  
 } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
 import { useAppDispatch } from '../../store/hooks';
@@ -35,15 +37,18 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
         items={[
           { key: '1', icon: <AppstoreOutlined />, label: 'Панель управления' },
           { key: '2', icon: <UserOutlined />, label: 'Пациенты' },
-          { key: '5', icon: <CreditCardOutlined />, label: 'Карточка пациента' },
+          { key: '3', icon: <UsergroupAddOutlined />, label: 'Пользователи' },
+          {key: '4', icon: <ScheduleOutlined />, label: 'Расписание'},
+          { key: '5', icon: <UnorderedListOutlined />, label: 'Приемы' },
+          {key: '6', icon: <IdcardOutlined />, label: 'Мед. карта' },
         ]}
         onClick={(e) => {
           const pageKeys: Record<string, string> = {
             '1': 'homePage',
             '2': 'patientsPage',
-            '3': 'homePage',
-            '4': 'homePage',
-            '5': 'homePage',
+            '3': 'PersonalPage',
+            '4': 'SchedulePage',
+            '5': 'AppintmentsPage',
           };
           dispatch(changePage(pageKeys[e.key]));
         }}

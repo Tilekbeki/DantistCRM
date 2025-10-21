@@ -1,4 +1,7 @@
 import HomePage from "./HomePage";
 import  PatientsPage from "./PatientsPage";
+import PersonalPage from "./PersonalPage";
+import SchedulePage from "./SchedulePage";
+import AppintmentsPage from "./AppintmentsPage";
 
-export {HomePage, PatientsPage}
+export {HomePage, PatientsPage, PersonalPage, SchedulePage, AppintmentsPage} 

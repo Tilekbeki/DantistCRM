@@ -10,7 +10,7 @@ import SideBar from './components/SideBar';
 const { Content } = Layout;
 import { BrowserRouter as Router, Routes,Route } from 'react-router-dom';
 
-import PatientsList from './components/Patients';
+import PatientsList from './components/PatientsList';
 import { useAppSelector } from './store/hooks';
 import CurrentPage from './pages/CurrentPage';
 

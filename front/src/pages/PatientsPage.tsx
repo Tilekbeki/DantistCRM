@@ -1,10 +1,14 @@
-import PatientsList from "../components/Patients"
+import PatientsList from "../components/PatientsList";
+import TemplatePage from "./TemplatePage";
 
 const PatientsPage = () => {
+     const handleClick = (e) => {
+      console.log(e);             // SyntheticEvent
+    console.log(e.nativeEvent);
+  }
     return (
-        <div>
-            <PatientsList/>
-        </div>
+     
+        <TemplatePage title="Пациенты" description="Управление базой данных пациентов"><PatientsList/> </TemplatePage> 
     )
 }
 
