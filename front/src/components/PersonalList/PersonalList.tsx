@@ -19,6 +19,7 @@ interface PatientType {
   status: string;
 }
 
+
 const PersonalList: React.FC = () => {
  
   const { items: patients, loading } = useAppSelector((state) => state.patients);

@@ -5,16 +5,28 @@ import {
   AppstoreOutlined,
   UserOutlined,
   IdcardOutlined,
-  
 } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
 import { useAppDispatch } from '../../store/hooks';
 import { changePage } from '../../store/slices/pageSlice';
+import { NavLink, useLocation } from 'react-router-dom';
 
 const { Sider } = Layout;
 
 const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+
+  // связываем активный пункт с текущим путём
+  const selectedKey = (() => {
+    if (location.pathname === '/') return '1';
+    if (location.pathname === '/patients') return '2';
+    if (location.pathname === '/personal') return '3';
+    if (location.pathname === '/schedule') return '4';
+    if (location.pathname === '/appointments') return '5';
+    if (location.pathname === '/medicalcards') return '6';
+    return '';
+  })();
 
   return (
     <Sider
@@ -32,23 +44,48 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
       <Menu
         theme="light"
         mode="inline"
-        defaultSelectedKeys={['1']}
+        selectedKeys={[selectedKey]} // важно для подсветки активного пункта
         style={{ border: 'none', padding: '1rem' }}
         items={[
-          { key: '1', icon: <AppstoreOutlined />, label: 'Панель управления' },
-          { key: '2', icon: <UserOutlined />, label: 'Пациенты' },
-          { key: '3', icon: <UsergroupAddOutlined />, label: 'Пользователи' },
-          {key: '4', icon: <ScheduleOutlined />, label: 'Расписание'},
-          { key: '5', icon: <UnorderedListOutlined />, label: 'Приемы' },
-          {key: '6', icon: <IdcardOutlined />, label: 'Мед. карта' },
+          {
+            key: '1',
+            icon: <AppstoreOutlined />,
+            label: <NavLink to="/">Панель управления</NavLink>,
+          },
+          {
+            key: '2',
+            icon: <UserOutlined />,
+            label: <NavLink to="/patients">Пациенты</NavLink>,
+          },
+          {
+            key: '3',
+            icon: <UsergroupAddOutlined />,
+            label: <NavLink to="/personal">Пользователи</NavLink>,
+          },
+          {
+            key: '4',
+            icon: <ScheduleOutlined />,
+            label: <NavLink to="/schedule">Расписание</NavLink>,
+          },
+          {
+            key: '5',
+            icon: <UnorderedListOutlined />,
+            label: <NavLink to="/appointments">Приемы</NavLink>,
+          },
+          {
+            key: '6',
+            icon: <IdcardOutlined />,
+            label: <NavLink to="/medicalcards">Мед. карта</NavLink>,
+          },
         ]}
         onClick={(e) => {
           const pageKeys: Record<string, string> = {
             '1': 'homePage',
             '2': 'patientsPage',
-            '3': 'PersonalPage',
-            '4': 'SchedulePage',
-            '5': 'AppintmentsPage',
+            '3': 'personalPage',
+            '4': 'schedulePage',
+            '5': 'appointmentsPage',
+            '6': 'medicalCardsPage',
           };
           dispatch(changePage(pageKeys[e.key]));
         }}

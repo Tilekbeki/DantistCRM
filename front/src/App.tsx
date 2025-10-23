@@ -1,57 +1,40 @@
-import React, { useState } from 'react';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,AntDesignOutlined
-} from '@ant-design/icons';
-import { Button, Layout, theme, ConfigProvider  } from 'antd';
-
-import { createStyles } from 'antd-style';
+import React from 'react';
+import {Layout, theme } from 'antd';
 import SideBar from './components/SideBar';
-const { Content } = Layout;
-import { BrowserRouter as Router, Routes,Route } from 'react-router-dom';
+import { PatientsPage,AppintmentsPage,MedicalCardsPage, SchedulePage, PersonalPage, HomePage } from './pages';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import PatientsList from './components/PatientsList';
-import { useAppSelector } from './store/hooks';
-import CurrentPage from './pages/CurrentPage';
 
-const useStyle = createStyles(({ prefixCls, css }) => ({
-  linearGradientButton: css`
-    &.${prefixCls}-btn-primary:not([disabled]):not(.${prefixCls}-btn-dangerous) {
-      > span {
-        position: relative;
-      }
-
-      &::before {
-        content: '';
-        background: linear-gradient(135deg, #6253e1, #04befe);
-        position: absolute;
-        inset: -1px;
-        opacity: 1;
-        transition: all 0.3s;
-        border-radius: inherit;
-      }
-
-      &:hover::before {
-        opacity: 0;
-      }
-    }
-  `,
-}));
 
 const App: React.FC = () => {
-  const { currentPage } = useAppSelector((state) => state.pages);
-  const [collapsed, setCollapsed] = useState(false);
-  const {
+
+   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  console.log(currentPage)
-
-   const { styles } = useStyle();
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <SideBar isCollapsed={false} />
-      <CurrentPage/>
+      <BrowserRouter>
+      <Layout>
+        <SideBar isCollapsed={false} />
+        <Layout.Content style={{
+          margin: '0px 0px',
+            padding: 24,
+            minHeight: 280,
+            background: colorBgContainer,
+            borderRadius: borderRadiusLG,
+        }}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/patients" element={<PatientsPage />} />
+            <Route path="/appointments" element={<AppintmentsPage />} />
+            <Route path="/medicalcards" element={<MedicalCardsPage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/personal" element={<PersonalPage />} />
+          </Routes>
+        </Layout.Content>
+      </Layout>
+    </BrowserRouter>
     </Layout>
    
   );

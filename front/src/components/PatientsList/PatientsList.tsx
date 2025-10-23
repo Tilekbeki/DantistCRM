@@ -1,9 +1,10 @@
-
 import { useAppSelector } from '../../store/hooks';
 import { Table, Tag, Space, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import {  PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
-
+import { PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import CreateAppointmentModal from '../CreateAppointmentModal/CreateAppointmentModal';
+import BaseAdminModal from '../../ui/ModalWindow/ModalWindow';
 const { Text } = Typography;
 
 interface PatientType {
@@ -20,49 +21,41 @@ interface PatientType {
 }
 
 const PatientsList: React.FC = () => {
- 
   const { items: patients, loading } = useAppSelector((state) => state.patients);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
- 
+  const toggleModalState = (state) => {
+    console.log('clicked');
+    setIsModalOpen(state);
+  };
+
+  const handleOk = (data) => {
+    console.log(data)
+    setIsModalOpen(false)
+  };
+  const handleCancel = () => setIsModalOpen(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'green';
-      case 'inactive':
-        return 'red';
-      case 'new':
-        return 'blue';
-      case 'examined':
-        return 'orange';
-      case 'treatment':
-        return 'purple';
-      case 'recovered':
-        return 'green';
-      default:
-        return 'default';
+      case 'active': return 'green';
+      case 'inactive': return 'red';
+      case 'new': return 'blue';
+      case 'examined': return 'orange';
+      case 'treatment': return 'purple';
+      case 'recovered': return 'green';
+      default: return 'default';
     }
   };
 
-
- 
-
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Активен';
-      case 'inactive':
-        return 'Неактивен';
-      case 'new':
-        return 'Новый';
-      case 'examined':
-        return 'Осмотрен';
-      case 'treatment':
-        return 'На лечении';
-      case 'recovered':
-        return 'Выздоровел';
-      default:
-        return status;
+      case 'active': return 'Активен';
+      case 'inactive': return 'Неактивен';
+      case 'new': return 'Новый';
+      case 'examined': return 'Осмотрен';
+      case 'treatment': return 'На лечении';
+      case 'recovered': return 'Выздоровел';
+      default: return status;
     }
   };
 
@@ -81,7 +74,7 @@ const PatientsList: React.FC = () => {
       title: 'Дата создания',
       dataIndex: 'date_of_birth',
       key: 'date_of_birth',
-      render: (_,record: string) =>new Date(record.createdAt).toLocaleDateString('ru-RU'),
+      render: (_, record) => new Date(record.createdAt).toLocaleDateString('ru-RU'),
     },
     {
       title: 'Пол',
@@ -99,19 +92,13 @@ const PatientsList: React.FC = () => {
       title: 'Telegram',
       dataIndex: 'tgUsername',
       key: 'tgUsername',
-      render: (tg?: string) =>
-        tg ? (
-          <Text>@{tg}</Text>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
+      render: (tg?: string) => tg ? <Text>@{tg}</Text> : <Text type="secondary">—</Text>,
     },
     {
       title: 'Адрес',
       dataIndex: 'address',
       key: 'address',
-      render: (address?: string) =>
-        address ? <Text>{address}</Text> : <Text type="secondary">—</Text>,
+      render: (address?: string) => address ? <Text>{address}</Text> : <Text type="secondary">—</Text>,
     },
     {
       title: 'Статус',
@@ -121,18 +108,18 @@ const PatientsList: React.FC = () => {
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
     },
-     {
-    title: 'Удалить',
-    dataIndex: '',
-    key: 'x',
-    render: () => <a>Удалить</a>,
-  },
-   {
-    title: 'Записать на прием',
-    dataIndex: '',
-    key: 'x',
-    render: () => <a>Записать</a>,
-  },
+    {
+      title: 'Удалить',
+      dataIndex: '',
+      key: 'delete',
+      render: () => <a>Удалить</a>,
+    },
+    {
+      title: 'Записать на прием',
+      dataIndex: '',
+      key: 'appointment',
+      render: () => <a onClick={toggleModalState}>Записать</a>,
+    },
   ];
 
   const data: PatientType[] = patients.map((p) => ({
@@ -141,6 +128,7 @@ const PatientsList: React.FC = () => {
   }));
 
   return (
+    <>
       <Table<PatientType>
         columns={columns}
         dataSource={data}
@@ -175,6 +163,15 @@ const PatientsList: React.FC = () => {
           ),
         }}
       />
+
+      {/* 👉 Модалка должна быть здесь, не внутри таблицы */}
+      <CreateAppointmentModal 
+         open = {isModalOpen}
+  onOpenChange={toggleModalState}
+  onSubmit={handleOk}
+  information={{userId:2, patientId:3}}
+      />
+    </>
   );
 };
 

@@ -1,39 +1,49 @@
-import React, { useState } from 'react';
-import { Button, Modal } from 'antd';
+import { Button, Modal, Form } from 'antd';
+import type { FC } from 'react';
 
-const ModalWindow: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+import type { FieldType } from '../types/types';
 
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
+import FieldRenderer from './helpers/FieldRenderer';
 
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
+interface FormModalProps {
+  title: string;
+  buttonTitle: string;
+  fields: FieldType[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: object) => void;
+}
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
+const BaseAdminModal: FC<FormModalProps> = ({ title, fields, onSubmit, open, onOpenChange }) => {
+
+  const onFinish = (data: object) => {
+    onSubmit(data);
+    onOpenChange(false);
   };
 
   return (
-    <>
-      <Button type="primary" onClick={showModal}>
-        Open Modal
-      </Button>
-      <Modal
-        title="Basic Modal"
-        closable={{ 'aria-label': 'Custom Close Button' }}
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-      </Modal>
-    </>
+    <Modal
+      title={title}
+      open={open}
+      centered
+      onCancel={() => onOpenChange(false)}
+      footer={null}
+    >
+      <Form onFinish={onFinish} >
+        {fields.map((field) => (
+          <div key={field.name}>
+            <FieldRenderer field={field} />
+          </div>
+        ))}
+
+        <Form.Item noStyle>
+          <Button  htmlType="submit" type="primary">
+            Сохранить
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 
-export default ModalWindow;
+export default BaseAdminModal;
