@@ -9,3 +9,14 @@ engine = create_engine(
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 Base = declarative_base()
+# Функция для создания таблиц
+def create_tables():
+    Base.metadata.create_all(bind=engine)
+
+# Функция для получения сессии БД
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

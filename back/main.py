@@ -1,11 +1,23 @@
 from fastapi import FastAPI
 from database import Base, engine
-from schema.patient_schema import PatientQuery, PatientMutation
-from schema.user_schema import Query, Mutation
 from fastapi.middleware.cors import CORSMiddleware
 import strawberry
 from strawberry.fastapi import GraphQLRouter
 
+# Импортируем все модели для создания таблиц
+from models import *
+# Импортируем все схемы
+from schema import (
+    PersonalQuery, PersonalMutation,
+    PatientQuery, PatientMutation,
+    AppointmentQuery, AppointmentMutation,
+    AllergiesQuery, AllergiesMutation,
+    TeethQuery, TeethMutation,
+    ServicesQuery, ServicesMutation,
+    MediaQuery, MediaMutation
+)
+
+# Создаем таблицы
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -17,18 +29,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Объединяем Query и Mutation из обеих схем
+# Объединяем все Query
 @strawberry.type
-class CombinedQuery(Query, PatientQuery):
+class Query(
+    PersonalQuery,
+    PatientQuery,
+    AppointmentQuery,
+    AllergiesQuery,
+    TeethQuery,
+    ServicesQuery,
+    MediaQuery
+):
     pass
 
+# Объединяем все Mutation
 @strawberry.type
-class CombinedMutation(Mutation, PatientMutation):
+class Mutation(
+    PersonalMutation,
+    PatientMutation,
+    AppointmentMutation,
+    AllergiesMutation,
+    TeethMutation,
+    ServicesMutation,
+    MediaMutation
+):
     pass
 
 # Создаем общую схему
-schema = strawberry.Schema(query=CombinedQuery, mutation=CombinedMutation)
-combined_graphql_app = GraphQLRouter(schema)
+schema = strawberry.Schema(query=Query, mutation=Mutation)
+graphql_app = GraphQLRouter(schema)
 
-# Единый endpoint для всей GraphQL API
-app.include_router(combined_graphql_app, prefix="/graphql")
+# Единый GraphQL endpoint
+app.include_router(graphql_app, prefix="/graphql")
