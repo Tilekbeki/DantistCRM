@@ -1,6 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-// Async thunk для получения пациентов
+
+
+export const dantistApi = createApi({
+  reducerPath: 'dantistApi',
+  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/graphql' }),
+  endpoints: (build) => ({
+    useGetPatientsQuery: build.query({
+      query: () => `patients/`,
+    }),
+  }),
+})
+
 export const fetchPatients = createAsyncThunk(
   "patients/fetchPatients",
   async (_, { rejectWithValue }) => {
@@ -22,7 +34,7 @@ export const fetchPatients = createAsyncThunk(
         }
       `;
 
-      const response = await fetch("http://localhost:8000/graphql/patient", {
+      const response = await fetch("http://localhost:8000/graphql", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,3 +90,4 @@ const patientSlice = createSlice({
 
 export const { clearError } = patientSlice.actions;
 export default patientSlice.reducer;
+export const { useGetPatientsQuery } = dantistApi;

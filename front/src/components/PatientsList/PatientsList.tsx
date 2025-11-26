@@ -4,7 +4,7 @@ import type { TableColumnsType } from 'antd';
 import { PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import CreateAppointmentModal from '../CreateAppointmentModal/CreateAppointmentModal';
-import BaseAdminModal from '../../ui/ModalWindow/ModalWindow';
+import { useGetPatientsQuery } from '../../store/services/DantistApi';
 const { Text } = Typography;
 
 interface PatientType {
@@ -21,7 +21,11 @@ interface PatientType {
 }
 
 const PatientsList: React.FC = () => {
-  const { items: patients, loading } = useAppSelector((state) => state.patients);
+  // Используем RTK Query вместо useSelector и dispatch
+    const { data: patientsData, isLoading, error } = useGetPatientsQuery();
+    
+    // Получаем пациентов из данных GraphQL
+    const patients = patientsData?.data?.patients || [];
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModalState = (state) => {
@@ -132,7 +136,7 @@ const PatientsList: React.FC = () => {
       <Table<PatientType>
         columns={columns}
         dataSource={data}
-        loading={loading}
+        loading={isLoading}
         pagination={{ pageSize: 8 }}
         expandable={{
           expandedRowRender: (record) => (

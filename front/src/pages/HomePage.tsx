@@ -1,10 +1,7 @@
 import { Card } from "antd"
 import { Users, Calendar, UserCog, Activity } from "lucide-react";
-import { useAppSelector } from '../store/hooks';
 import TemplatePage from "./TemplatePage";
-import { useEffect } from "react";
-import { useAppDispatch } from '../store/hooks';
-import { fetchPatients } from '../store/slices/patientSlice';
+import { useGetPatientsQuery } from '../store/services/DantistApi'; // Импортируем ваш RTK Query хук
 
 // Вынесем карточки в отдельные компоненты для лучшей читаемости
 const StatCard = ({ 
@@ -33,15 +30,19 @@ const StatCard = ({
 );
 
 const HomePage = () => {
-  const { items: patients } = useAppSelector((state) => state.patients);
+  // Используем RTK Query вместо useSelector и dispatch
+  const { data: patientsData, isLoading, error } = useGetPatientsQuery();
+  
+  // Получаем пациентов из данных GraphQL
+  const patients = patientsData?.data?.patients || [];
   
   // Мемоизация контента для оптимизации
   const content = (
     <div className="flex gap-4 flex-wrap">
       <StatCard
         title="Всего пациентов"
-        value={patients.length}
-        description="+12 за последний месяц"
+        value={isLoading ? "..." : patients.length}
+        description={isLoading ? "Загрузка..." : `+12 за последний месяц`}
         icon={Users}
       />
       <StatCard
@@ -64,11 +65,18 @@ const HomePage = () => {
       />
     </div>
   );
-   const dispatch = useAppDispatch();
-   
-   useEffect(() => {
-    dispatch(fetchPatients());
-  }, [dispatch]);
+
+  // Показываем загрузку или ошибку
+  if (error) {
+    return (
+      <TemplatePage 
+        title="Панель управления" 
+        description="Ошибка загрузки данных"
+      >
+        <div className="text-red-500">Ошибка: Не удалось загрузить данные пациентов</div>
+      </TemplatePage>
+    );
+  }
 
   return (
     <TemplatePage 

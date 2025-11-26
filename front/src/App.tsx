@@ -3,11 +3,12 @@ import {Layout, theme } from 'antd';
 import SideBar from './components/SideBar';
 import { PatientsPage,AppintmentsPage,MedicalCardsPage, SchedulePage, PersonalPage, HomePage } from './pages';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-
+import { useGetPatientsQuery } from './store/services/DantistApi';
 
 
 const App: React.FC = () => {
-
+  const { data, error, isLoading } = useGetPatientsQuery()
+  console.log(data,error, isLoading)
    const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
