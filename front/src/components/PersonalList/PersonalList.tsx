@@ -6,17 +6,11 @@ import {  PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
-interface PatientType {
+interface IPersonal {
   key: React.Key;
   id: number;
-  firstName: string;
-  lastName: string;
-  createdAt: string;
-  gender: string;
-  phone_number?: string;
-  tgUsername?: string;
-  address?: string;
-  status: string;
+  name: string;
+  surname: string;
 }
 
 
@@ -26,55 +20,55 @@ const PersonalList: React.FC = () => {
 
  
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'green';
-      case 'inactive':
-        return 'red';
-      case 'new':
-        return 'blue';
-      case 'examined':
-        return 'orange';
-      case 'treatment':
-        return 'purple';
-      case 'recovered':
-        return 'green';
-      default:
-        return 'default';
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'active':
+  //       return 'green';
+  //     case 'inactive':
+  //       return 'red';
+  //     case 'new':
+  //       return 'blue';
+  //     case 'examined':
+  //       return 'orange';
+  //     case 'treatment':
+  //       return 'purple';
+  //     case 'recovered':
+  //       return 'green';
+  //     default:
+  //       return 'default';
+  //   }
+  // };
 
 
  
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Активен';
-      case 'inactive':
-        return 'Неактивен';
-      case 'new':
-        return 'Новый';
-      case 'examined':
-        return 'Осмотрен';
-      case 'treatment':
-        return 'На лечении';
-      case 'recovered':
-        return 'Выздоровел';
-      default:
-        return status;
-    }
-  };
+  // const getStatusText = (status: string) => {
+  //   switch (status) {
+  //     case 'active':
+  //       return 'Активен';
+  //     case 'inactive':
+  //       return 'Неактивен';
+  //     case 'new':
+  //       return 'Новый';
+  //     case 'examined':
+  //       return 'Осмотрен';
+  //     case 'treatment':
+  //       return 'На лечении';
+  //     case 'recovered':
+  //       return 'Выздоровел';
+  //     default:
+  //       return status;
+  //   }
+  // };
 
-  const columns: TableColumnsType<PatientType> = [
+  const columns: TableColumnsType<IPersonal> = [
     {
       title: 'ФИО',
       dataIndex: 'first_name',
       key: 'first_name',
       render: (_, record) => (
         <a href={`/patients/${record.id}`} className="font-semibold text-blue-600 hover:underline">
-          {record.firstName} {record.lastName}
+          {record.name} {record.surname}
         </a>
       ),
     },
@@ -121,13 +115,13 @@ const PersonalList: React.FC = () => {
   },
   ];
 
-  const data: PatientType[] = patients.map((p) => ({
+  const data: IPersonal[] = patients.map((p) => ({
     key: p.id,
     ...p,
   }));
 
   return (
-      <Table<PatientType>
+      <Table<IPersonal>
         columns={columns}
         dataSource={data}
         loading={loading}
@@ -136,11 +130,11 @@ const PersonalList: React.FC = () => {
           expandedRowRender: (record) => (
             <div className="p-3 bg-gray-50 rounded-md">
               <Space direction="vertical">
-                <Space>
+                {/* <Space>
                   <CalendarOutlined />
                   <Text>Дата создания: {new Date(record.createdAt).toLocaleDateString('ru-RU')}</Text>
-                </Space>
-                {record.phone_number && (
+                </Space> */}
+                {/* {record.phone_number && (
                   <Space>
                     <PhoneOutlined />
                     <Text>Телефон: {record.phone_number}</Text>
@@ -155,7 +149,7 @@ const PersonalList: React.FC = () => {
                   <Space>
                     <Text type="secondary">Адрес: {record.address}</Text>
                   </Space>
-                )}
+                )} */}
               </Space>
             </div>
           ),

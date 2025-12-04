@@ -44,13 +44,13 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
       <Menu
         theme="light"
         mode="inline"
-        selectedKeys={[selectedKey]} // важно для подсветки активного пункта
+        selectedKeys={[selectedKey]} 
         style={{ border: 'none', padding: '1rem' }}
         items={[
           {
             key: '1',
             icon: <AppstoreOutlined />,
-            label: <NavLink to="/">Панель управления</NavLink>,
+            label: <NavLink to="/">Главная</NavLink>,
           },
           {
             key: '2',
@@ -60,7 +60,7 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
           {
             key: '3',
             icon: <UsergroupAddOutlined />,
-            label: <NavLink to="/personal">Пользователи</NavLink>,
+            label: <NavLink to="/personal">Персонал</NavLink>,
           },
           {
             key: '4',

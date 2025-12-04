@@ -3,7 +3,7 @@ import {Layout, theme } from 'antd';
 import SideBar from './components/SideBar';
 import { PatientsPage,AppintmentsPage,MedicalCardsPage, SchedulePage, PersonalPage, HomePage } from './pages';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { useGetPatientsQuery } from './store/services/DantistApi';
+import { useGetPatientsQuery } from './store/services/PatientApi';
 
 
 const App: React.FC = () => {

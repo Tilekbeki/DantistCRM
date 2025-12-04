@@ -1,9 +1,11 @@
 import { Card } from "antd"
 import { Users, Calendar, UserCog, Activity } from "lucide-react";
 import TemplatePage from "./TemplatePage";
-import { useGetPatientsQuery } from '../store/services/DantistApi'; // Импортируем ваш RTK Query хук
+import { useGetPatientsQuery } from '../store/services/PatientApi'; 
+import { useAppDispatch } from "../store/hooks";
+import { useEffect } from "react";
+import { addPatient, removePatient } from '../store/slices/patientSlice'
 
-// Вынесем карточки в отдельные компоненты для лучшей читаемости
 const StatCard = ({ 
   title, 
   value, 
@@ -29,14 +31,21 @@ const StatCard = ({
   </Card>
 );
 
+
+
 const HomePage = () => {
-  // Используем RTK Query вместо useSelector и dispatch
   const { data: patientsData, isLoading, error } = useGetPatientsQuery();
+   const dispatch = useAppDispatch()
+  const patients = patientsData?.data?.allPatients || [];
   
-  // Получаем пациентов из данных GraphQL
-  const patients = patientsData?.data?.patients || [];
-  
-  // Мемоизация контента для оптимизации
+  useEffect(() => {
+    if (patients.length > 0) {
+      patients.forEach(patient => {
+        dispatch(addPatient(patient)) 
+      })
+    }
+  }, [patients, dispatch]) // Добавил dispatch в зависимости
+
   const content = (
     <div className="flex gap-4 flex-wrap">
       <StatCard

@@ -5,6 +5,20 @@ from models.personal import Personal
 from .base import QueryResult
 
 @strawberry.input
+class PersonalWithPasswordInput:
+    avatar_url: Optional[str] = None
+    name: str
+    surname: str
+    patronymic: Optional[str] = None
+    role: str
+    email: Optional[str] = None
+    tg: Optional[str] = None
+    phone_number: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None  # Добавляем поле пароля
+    is_active: Optional[bool] = True
+
+@strawberry.input
 class PersonalInput:
     avatar_url: Optional[str] = None
     name: str
@@ -81,13 +95,39 @@ class PersonalQuery:
 @strawberry.type
 class PersonalMutation:
     @strawberry.mutation
-    def create_personal(self, input: PersonalInput) -> QueryResult:
+    def create_personal(self, info, input: PersonalWithPasswordInput) -> QueryResult:
+        # Проверяем права - только admin может создавать персонал
+        current_user = info.context.get("current_user")
+        if not current_user or current_user.role != "admin":
+            return QueryResult(success=False, message="Требуются права администратора")
+        
         db = SessionLocal()
         try:
-            personal = Personal(**input.__dict__)
+            # Проверяем уникальность username и email
+            if input.username:
+                existing = db.query(Personal).filter(Personal.username == input.username).first()
+                if existing:
+                    return QueryResult(success=False, message="Это имя пользователя уже занято")
+            
+            if input.email:
+                existing = db.query(Personal).filter(Personal.email == input.email).first()
+                if existing:
+                    return QueryResult(success=False, message="Этот email уже используется")
+            
+            personal_data = input.__dict__.copy()
+            
+            # Хэшируем пароль если он предоставлен
+            if personal_data.get('password'):
+                from passlib.context import CryptContext
+                pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+                personal_data['hashed_password'] = pwd_context.hash(personal_data['password'])
+                del personal_data['password']
+            
+            personal = Personal(**personal_data)
             db.add(personal)
             db.commit()
             db.refresh(personal)
+            
             return QueryResult(success=True, message="Персонал создан", data=personal.id)
         except Exception as e:
             db.rollback()

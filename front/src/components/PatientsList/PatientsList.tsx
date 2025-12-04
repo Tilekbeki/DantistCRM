@@ -1,66 +1,96 @@
-import { useAppSelector } from '../../store/hooks';
-import { Table, Tag, Space, Typography } from 'antd';
+import { Table, notification, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import { PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
-import { useState } from 'react';
-import CreateAppointmentModal from '../CreateAppointmentModal/CreateAppointmentModal';
-import { useGetPatientsQuery } from '../../store/services/DantistApi';
+import { useState, useEffect } from 'react'; // Добавлен useEffect
+import { useGetPatientsQuery, useDeletePatientMutation, useUpdatePatientMutation } from '../../store/services/PatientApi';
 const { Text } = Typography;
+import { patientFields } from '../Fields/patientFields';
+import EntityModal from '../EntityModal/EntityModal';
+import dayjs from 'dayjs';
+
+type NotificationType = 'success';
 
 interface PatientType {
   key: React.Key;
   id: number;
-  firstName: string;
-  lastName: string;
+  name: string;
+  surname: string;
   createdAt: string;
   gender: string;
-  phone_number?: string;
-  tgUsername?: string;
-  address?: string;
-  status: string;
+  phoneNumber?: string;
+  tg?: string;
+  email?: string;
+  dateOfBirth: string | any;
+}
+
+interface formData extends PatientType {
+  dateOfBirth: string;
 }
 
 const PatientsList: React.FC = () => {
-  // Используем RTK Query вместо useSelector и dispatch
-    const { data: patientsData, isLoading, error } = useGetPatientsQuery();
-    
-    // Получаем пациентов из данных GraphQL
-    const patients = patientsData?.data?.patients || [];
+  
+  const { data: patientsData, isLoading } = useGetPatientsQuery();
+  const [deletePatient] = useDeletePatientMutation();
+  const [updatePatient] = useUpdatePatientMutation();
+  const patients = patientsData?.data?.allPatients || [];
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<PatientType | null>(null);
+  const [api, contextHolder] = notification.useNotification();
 
-  const toggleModalState = (state) => {
-    console.log('clicked');
-    setIsModalOpen(state);
+  const openNotificationWithIcon = (type: NotificationType) => {
+    api[type]({
+      title: 'Success!',
+      description: 'Обновление произошло успешно!',
+    });
   };
 
-  const handleOk = (data) => {
-    console.log(data)
-    setIsModalOpen(false)
+  const openEditModal = (patient: PatientType) => {
+    setSelectedPatient({
+      ...patient,
+      dateOfBirth: dayjs(patient.dateOfBirth),
+    });
+    setIsModalOpen(true);
   };
-  const handleCancel = () => setIsModalOpen(false);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'green';
-      case 'inactive': return 'red';
-      case 'new': return 'blue';
-      case 'examined': return 'orange';
-      case 'treatment': return 'purple';
-      case 'recovered': return 'green';
-      default: return 'default';
+  // Сбрасываем selectedPatient при закрытии модалки
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    // Не сбрасываем сразу, а через небольшой таймаут, чтобы модалка успела анимироваться
+    setSelectedPatient(null);
+  };
+
+  // Альтернатива: сброс при изменении isModalOpen
+  useEffect(() => {
+    if (!isModalOpen) {
+      setSelectedPatient(null);
     }
-  };
+  }, [isModalOpen]);
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Активен';
-      case 'inactive': return 'Неактивен';
-      case 'new': return 'Новый';
-      case 'examined': return 'Осмотрен';
-      case 'treatment': return 'На лечении';
-      case 'recovered': return 'Выздоровел';
-      default: return status;
-    }
+  const handleSubmit = (formData: formData) => {
+    // Преобразуем дату в нужный формат для сервера
+    console.log(formData.dateOfBirth, 'дата', dayjs(+formData.dateOfBirth).format("YYYY-MM-DD"));
+    
+    const formattedData = {
+      ...formData,
+      dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
+    };
+
+    console.log("Updated data:", dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
+    
+    updatePatient({
+      id: selectedPatient?.id,
+      input: formattedData
+    })
+    .unwrap()
+    .then(() => {
+      openNotificationWithIcon('success');
+    })
+    .catch((error) => {
+      console.error('Ошибка при обновлении:', error);
+    });
+    
+    // Закрываем модалку и сбрасываем пациента
+    handleModalClose();
   };
 
   const columns: TableColumnsType<PatientType> = [
@@ -69,60 +99,59 @@ const PatientsList: React.FC = () => {
       dataIndex: 'first_name',
       key: 'first_name',
       render: (_, record) => (
-        <a href={`/patients/${record.id}`} className="font-semibold text-blue-600 hover:underline">
-          {record.firstName} {record.lastName}
+        <a href={`/patients/${record.id}`}>
+          {record.name} {record.surname}
         </a>
       ),
     },
     {
-      title: 'Дата создания',
-      dataIndex: 'date_of_birth',
-      key: 'date_of_birth',
-      render: (_, record) => new Date(record.createdAt).toLocaleDateString('ru-RU'),
+      title: 'Дата рождения',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (date) => {
+        if (!date) return '—';
+        const dateObj = typeof date === 'number' ? dayjs(date) : dayjs(date);
+        return dateObj.isValid() ? dateObj.format('DD.MM.YYYY') : '—';
+      },
     },
     {
       title: 'Пол',
       dataIndex: 'gender',
       key: 'gender',
-      render: (gender: string) => (gender === 'male' ? 'Мужской' : 'Женский'),
+      render: (_, record) => record.gender === 'male' ? 'Мужской' : 'Женский',
     },
     {
       title: 'Телефон',
       dataIndex: 'phone_number',
-      key: 'phone_number',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      key: 'phoneNumber',
+      render: (_, record) => record.phoneNumber || <Text type="secondary">—</Text>,
     },
     {
-      title: 'Telegram',
-      dataIndex: 'tgUsername',
-      key: 'tgUsername',
-      render: (tg?: string) => tg ? <Text>@{tg}</Text> : <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Адрес',
-      dataIndex: 'address',
-      key: 'address',
-      render: (address?: string) => address ? <Text>{address}</Text> : <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
+      title: 'Редактировать',
+      key: 'edit',
+      render: (_, record) => (
+        <a 
+          key={`link-${record.id}`} 
+          onClick={() => openEditModal(record)}
+          style={{ cursor: 'pointer' }}
+        >
+          Редактировать
+        </a>
       ),
     },
     {
       title: 'Удалить',
-      dataIndex: '',
       key: 'delete',
-      render: () => <a>Удалить</a>,
-    },
-    {
-      title: 'Записать на прием',
-      dataIndex: '',
-      key: 'appointment',
-      render: () => <a onClick={toggleModalState}>Записать</a>,
+      render: (_, record) => (
+        <a 
+          onClick={() => {
+            deletePatient(record.id);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          Удалить
+        </a>
+      ),
     },
   ];
 
@@ -133,47 +162,24 @@ const PatientsList: React.FC = () => {
 
   return (
     <>
-      <Table<PatientType>
+      {contextHolder}
+      <Table
         columns={columns}
         dataSource={data}
         loading={isLoading}
         pagination={{ pageSize: 8 }}
-        expandable={{
-          expandedRowRender: (record) => (
-            <div className="p-3 bg-gray-50 rounded-md">
-              <Space direction="vertical">
-                <Space>
-                  <CalendarOutlined />
-                  <Text>Дата создания: {new Date(record.createdAt).toLocaleDateString('ru-RU')}</Text>
-                </Space>
-                {record.phone_number && (
-                  <Space>
-                    <PhoneOutlined />
-                    <Text>Телефон: {record.phone_number}</Text>
-                  </Space>
-                )}
-                {record.tgUsername && (
-                  <Space>
-                    <Text type="secondary">Telegram: @{record.tgUsername}</Text>
-                  </Space>
-                )}
-                {record.address && (
-                  <Space>
-                    <Text type="secondary">Адрес: {record.address}</Text>
-                  </Space>
-                )}
-              </Space>
-            </div>
-          ),
-        }}
+        rowKey="id"
       />
 
-      {/* 👉 Модалка должна быть здесь, не внутри таблицы */}
-      <CreateAppointmentModal 
-         open = {isModalOpen}
-  onOpenChange={toggleModalState}
-  onSubmit={handleOk}
-  information={{userId:2, patientId:3}}
+      <EntityModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title="Редактирование пациента"
+        fields={patientFields}
+        defaultValues={selectedPatient || {}}
+        buttonText="Сохранить изменения"
+        onSubmit={handleSubmit}
+        key={selectedPatient?.id || 'modal'} // Ключ для принудительного ререндера
       />
     </>
   );

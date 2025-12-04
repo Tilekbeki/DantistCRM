@@ -8,7 +8,7 @@ import type { FieldType } from '../../types/types';
 import CheckboxGroupField from './CheckboxGroupField';
 interface FieldRendererProps {
   field: FieldType;
-  extraFieldName: string;
+  extraFieldName?: string;
 }
 
 //ниже самая важная функия для рендеринга элементов форм ее можно переиспользовать
@@ -69,7 +69,7 @@ const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName }) => {
           })}
           normalize={(value) => (value && dayjs(value).isValid() ? `${dayjs(value).valueOf()}` : undefined)}
         >
-          <DatePicker
+          <DatePicker 
             {...(field.format === 'DD.MM.YYYY HH:mm' ? { showTime: true } : null)}
             placeholder={
               field.format === 'YYYY' ? 'ГГГГ' : field.format === 'DD.MM.YYYY' ? 'ДД.ММ.ГГГГ' : 'ДД:ММ:ГГГГ ЧЧ:ММ'

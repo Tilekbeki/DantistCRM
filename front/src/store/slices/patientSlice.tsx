@@ -1,68 +1,10 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-
-
-
-export const dantistApi = createApi({
-  reducerPath: 'dantistApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/graphql' }),
-  endpoints: (build) => ({
-    useGetPatientsQuery: build.query({
-      query: () => `patients/`,
-    }),
-  }),
-})
-
-export const fetchPatients = createAsyncThunk(
-  "patients/fetchPatients",
-  async (_, { rejectWithValue }) => {
-    try {
-      const query = `
-        query {
-          patients {
-            id
-            firstName
-            lastName
-            dateOfBirth
-            gender
-            address
-            phoneNumber
-            tgUsername
-            status
-            createdAt
-          }
-        }
-      `;
-
-      const response = await fetch("http://localhost:8000/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0].message);
-      }
-
-      return result.data.patients;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
+// store/slices/patientSlice.tsx
+import { createSlice } from "@reduxjs/toolkit";
 
 const patientSlice = createSlice({
   name: "patients",
   initialState: {
-    items: [],
+    patientsList: [],
     loading: false,
     error: null,
   },
@@ -70,24 +12,15 @@ const patientSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchPatients.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchPatients.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(fetchPatients.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+    // Добавьте reducers если нужны локальные изменения
+    addPatient: (state, action) => {
+      state.patientsList.push(action.payload);
+    },
+    removePatient: (state, action) => {
+      state.patientsList = state.patientsList.filter(p => p.id !== action.payload);
+    },
   },
 });
 
-export const { clearError } = patientSlice.actions;
+export const { clearError, addPatient, removePatient } = patientSlice.actions;
 export default patientSlice.reducer;
-export const { useGetPatientsQuery } = dantistApi;
