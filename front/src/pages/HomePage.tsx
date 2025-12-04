@@ -2,6 +2,7 @@ import { Card } from "antd"
 import { Users, Calendar, UserCog, Activity } from "lucide-react";
 import TemplatePage from "./TemplatePage";
 import { useGetPatientsQuery } from '../store/services/PatientApi'; 
+import { useGetPersonalsQuery } from "../store/services/PersonalApi";
 import { useAppDispatch } from "../store/hooks";
 import { useEffect } from "react";
 import { addPatient, removePatient } from '../store/slices/patientSlice'
@@ -35,9 +36,11 @@ const StatCard = ({
 
 const HomePage = () => {
   const { data: patientsData, isLoading, error } = useGetPatientsQuery();
+  const {data: personalsData} = useGetPersonalsQuery();
    const dispatch = useAppDispatch()
   const patients = patientsData?.data?.allPatients || [];
-  
+  const personals = personalsData?.data?.allPersonal || [];
+  console.log(personals)
   useEffect(() => {
     if (patients.length > 0) {
       patients.forEach(patient => {
@@ -56,20 +59,20 @@ const HomePage = () => {
       />
       <StatCard
         title="Приемов сегодня"
-        value={8}
+        value={0}
         description="3 завершено, 5 запланировано"
         icon={Calendar}
       />
       <StatCard
         title="Врачей"
-        value={5}
+        value={isLoading ? "..." : personals.length}
         description="Все активны"
         icon={UserCog}
       />
       <StatCard
         title="Операций за месяц"
-        value={156}
-        description="+23% к прошлому месяцу"
+        value={0}
+        description="+0% к прошлому месяцу"
         icon={Activity}
       />
     </div>

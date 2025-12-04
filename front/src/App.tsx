@@ -4,11 +4,12 @@ import SideBar from './components/SideBar';
 import { PatientsPage,AppintmentsPage,MedicalCardsPage, SchedulePage, PersonalPage, HomePage } from './pages';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useGetPatientsQuery } from './store/services/PatientApi';
-
+import { useGetPersonalsQuery } from './store/services/PersonalApi';
 
 const App: React.FC = () => {
   const { data, error, isLoading } = useGetPatientsQuery()
-  console.log(data,error, isLoading)
+  const {personals }  = useGetPersonalsQuery()
+  console.log(data, personals,error, isLoading)
    const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();

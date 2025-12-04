@@ -12,12 +12,12 @@ interface IPersonal {
   role: string
   patronymic?: string;
   isActive: boolean;
-  avatarLink: string;
+  avatarUrl: string;
   createdAt: string;
 }
 
 
-interface IPersonalInput {
+interface PersonalInput {
   id: number
   username?: string
   email?: string
@@ -27,6 +27,8 @@ interface IPersonalInput {
   role: string
   patronymic?: string;
   isActive?: boolean;
+  avatarUrl?: string;
+  createdAt?: string;
 }
 
 
@@ -48,7 +50,7 @@ export const personalApi = createApi({
   tagTypes: ['Personal'],
   endpoints: (build) => ({
     // Получить всех пациентов
-    getPersonal: build.query<{ data: { allPersonals: IPersonal[] } }, void>({
+    getPersonals: build.query<{ data: { allPersonal: IPersonal[] } }, void>({
       query: () => ({
         url: '',
         method: 'POST',
@@ -57,13 +59,14 @@ export const personalApi = createApi({
             query {
               allPersonal {
                 id
-                username
+                avatarUrl
+                name
                 surname
                 patronymic
-                email
-                password
                 role
-                isActive
+                email
+                tg
+                phoneNumber
                 createdAt
               }
             }
@@ -89,6 +92,7 @@ export const personalApi = createApi({
                 email
                 password
                 role
+                avatarUrl
                 isActive
                 createdAt
               }
@@ -101,13 +105,13 @@ export const personalApi = createApi({
     }),
     
     // Создать пациента
-    createPersonal: build.mutation<{ data: { createPersonal: QueryResult } }, IPersonalInput>({
+    createPersonal: build.mutation<{ data: { createPersonal: QueryResult } }, PersonalInput>({
       query: (personalData) => ({
         url: '',
         method: 'POST',
         body: {
           query: `
-            mutation CreatePersonal($input: IPersonalInput!) {
+            mutation CreatePersonal($input: PersonalWithPasswordInput!) {
               createPersonal(input: $input) {
                 success
                 message
@@ -124,7 +128,7 @@ export const personalApi = createApi({
               isActive: personalData.isActive,
               password: personalData.password,
               role: personalData.role,
-              ava
+              avatarUrl: personalData.avatarUrl
               
             }
           }
@@ -133,13 +137,13 @@ export const personalApi = createApi({
       invalidatesTags: ['Personal']
     }),
     
-    updatePersonal: build.mutation<{ data: { updatePersonal: QueryResult } }, { id: number; input: IPersonalInput }>({
+    updatePersonal: build.mutation<{ data: { updatePersonal: QueryResult } }, { id: number; input: PersonalInput }>({
       query: ({ id, input }) => ({
         url: '',
         method: 'POST',
         body: {
           query: `
-            mutation UpdatePersonal($id: Int!, $input: IPersonalInput!) {
+            mutation UpdatePersonal($id: Int!, $input: PersonalInput!) {
               updatePersonal(id: $id, input: $input) {
                 success
                 message
@@ -154,11 +158,10 @@ export const personalApi = createApi({
               surname: input.surname,
               patronymic: input.patronymic,
               email: input.email,
-              dateOfBirth: input.dateOfBirth,
-              avatarLink: input.avatarLink,
-              gender: input.gender?.toUpperCase(),
-              phoneNumber: input.phoneNumber,
-              tg: input.tg
+              isActive: input.isActive,
+              password: input.password,
+              role: input.role,
+              avatarUrl: input.avatarUrl
             }
           }
         },

@@ -1,8 +1,7 @@
-
-import { useAppSelector } from '../../store/hooks';
 import { Table, Tag, Space, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import {  PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
+import { useGetPersonalsQuery } from '../../store/services/PersonalApi';
+
 
 const { Text } = Typography;
 
@@ -11,55 +10,17 @@ interface IPersonal {
   id: number;
   name: string;
   surname: string;
+  phoneNumber: string;
+  role: string;
+  tg: string;
+  email: string;
 }
 
 
 const PersonalList: React.FC = () => {
- 
-  const { items: patients, loading } = useAppSelector((state) => state.patients);
+ const { data: personalsData, isLoading, error } = useGetPersonalsQuery();
+ const personals = personalsData?.data?.allPersonal || [];
 
- 
-
-  // const getStatusColor = (status: string) => {
-  //   switch (status) {
-  //     case 'active':
-  //       return 'green';
-  //     case 'inactive':
-  //       return 'red';
-  //     case 'new':
-  //       return 'blue';
-  //     case 'examined':
-  //       return 'orange';
-  //     case 'treatment':
-  //       return 'purple';
-  //     case 'recovered':
-  //       return 'green';
-  //     default:
-  //       return 'default';
-  //   }
-  // };
-
-
- 
-
-  // const getStatusText = (status: string) => {
-  //   switch (status) {
-  //     case 'active':
-  //       return 'Активен';
-  //     case 'inactive':
-  //       return 'Неактивен';
-  //     case 'new':
-  //       return 'Новый';
-  //     case 'examined':
-  //       return 'Осмотрен';
-  //     case 'treatment':
-  //       return 'На лечении';
-  //     case 'recovered':
-  //       return 'Выздоровел';
-  //     default:
-  //       return status;
-  //   }
-  // };
 
   const columns: TableColumnsType<IPersonal> = [
     {
@@ -72,37 +33,31 @@ const PersonalList: React.FC = () => {
         </a>
       ),
     },
-     {
+     {  
       title: 'email',
       dataIndex: 'email',
       key: 'email',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      render: (_, record) => record.email || <Text type="secondary">—</Text>
     },
     {
       title: 'Телефон',
       dataIndex: 'phone_number',
       key: 'phone_number',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      render: (_, record) => record.phoneNumber || <Text type="secondary">—</Text>,
     },
     {
       title: 'Роль',
       dataIndex: 'role',
       key: 'role',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Специализация',
-      dataIndex: 'occupation',
-      key: 'occupation',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      render: (_, record) => record.role || <Text type="secondary">—</Text>,
     },
     {
       title: 'Telegram',
       dataIndex: 'tgUsername',
       key: 'tgUsername',
-      render: (tg?: string) =>
-        tg ? (
-          <Text>@{tg}</Text>
+      render: (_,record) =>
+        record.tg ? (
+          <Text>{record.tg}</Text>
         ) : (
           <Text type="secondary">—</Text>
         ),
@@ -115,7 +70,7 @@ const PersonalList: React.FC = () => {
   },
   ];
 
-  const data: IPersonal[] = patients.map((p) => ({
+  const data: IPersonal[] = personals.map((p) => ({
     key: p.id,
     ...p,
   }));
@@ -124,7 +79,7 @@ const PersonalList: React.FC = () => {
       <Table<IPersonal>
         columns={columns}
         dataSource={data}
-        loading={loading}
+        loading={isLoading}
         pagination={{ pageSize: 8 }}
         expandable={{
           expandedRowRender: (record) => (

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .base import Base
@@ -20,6 +20,8 @@ class Personal(Base):
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+    experience = Column(Integer, default=0)
+    date_of_birth = Column(Date, nullable=True)
     
     appointments_as_doctor = relationship("Appointment", back_populates="doctor")
     records_as_doctor = relationship("PatientRecords", back_populates="doctor")
