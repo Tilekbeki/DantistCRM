@@ -14,12 +14,17 @@ const PersonalPage = () => {
 
   
     const handleOk = async (data: any) => {
-      console.log('Данные для создания персонала:', data);
-      const { confirmPassword, ...staffData } = data;
+      
+      const { confirmPassword,dateOfBirth,experience, ...staffData } = data;
+      console.log('Данные для созданияzzzz персонала:', {experience: +experience,
+        dateOfBirth: dayjs(+dateOfBirth).format('YYYY-MM-DD'),
+        ...staffData});
       console.log('Данные для создания персонала:', staffData);
       console.log('Подтверждение пароля:', confirmPassword);
 
-      const result = await createPersonal({...staffData, dateOfBirth: dayjs(+staffData.dateOfBirth).format('YYYY-MM-DD')}).unwrap();
+      const result = await createPersonal({experience: +experience,
+        dateOfBirth: dayjs(+dateOfBirth).format('YYYY-MM-DD'),
+        ...staffData}).unwrap()
       if (result.data?.createPersonal?.success) {
         setIsModalOpen(false);
         alert('Пациент успешно создан!');
@@ -44,6 +49,7 @@ const PersonalPage = () => {
                 buttonText="Создать"
                 onSubmit={handleOk}
                 isLoading={isLoading} // Передаем состояние загрузки в модалку
+                hasDefaultValue={false}
               />
         </TemplatePage> 
     )

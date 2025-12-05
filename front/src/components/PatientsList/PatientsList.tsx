@@ -52,14 +52,11 @@ const PatientsList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Сбрасываем selectedPatient при закрытии модалки
   const handleModalClose = () => {
     setIsModalOpen(false);
-    // Не сбрасываем сразу, а через небольшой таймаут, чтобы модалка успела анимироваться
     setSelectedPatient(null);
   };
 
-  // Альтернатива: сброс при изменении isModalOpen
   useEffect(() => {
     if (!isModalOpen) {
       setSelectedPatient(null);
@@ -67,7 +64,6 @@ const PatientsList: React.FC = () => {
   }, [isModalOpen]);
 
   const handleSubmit = (formData: formData) => {
-    // Преобразуем дату в нужный формат для сервера
     console.log(formData.dateOfBirth, 'дата', dayjs(+formData.dateOfBirth).format("YYYY-MM-DD"));
     
     const formattedData = {

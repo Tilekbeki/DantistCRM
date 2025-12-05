@@ -33,6 +33,7 @@ class PersonalInput:
     role: Optional[str] = None
     email: Optional[str] = None
     tg: Optional[str] = None
+    username: Optional[str] = None  # ← Убедитесь, что это есть
     phone_number: Optional[str] = None
     experience: Optional[int] = None
     is_active: Optional[bool] = None
@@ -44,6 +45,7 @@ class PersonalType:
     avatar_url: Optional[str]
     name: str
     surname: str
+    username: str
     patronymic: Optional[str]
     role: str
     email: Optional[str]
@@ -98,6 +100,7 @@ class PersonalQuery:
                     role=personal.role,
                     email=personal.email,
                     tg=personal.tg,
+                    username=personal.username,
                     phone_number=personal.phone_number,
                     created_at=personal.created_at.isoformat(),
                     is_active=personal.is_active,
@@ -119,21 +122,22 @@ class PersonalQuery:
             personnel = query.all()
             return [
                 PersonalType(
-                    id=p.id,
-                    avatar_url=p.avatar_url,
-                    name=p.name,
-                    surname=p.surname,
-                    patronymic=p.patronymic,
-                    role=p.role,
-                    email=p.email,
-                    tg=p.tg,
-                    phone_number=p.phone_number,
-                    created_at=p.created_at.isoformat(),
-                    is_active=p.is_active,
-                    experience=p.experience,
-                    date_of_birth=p.date_of_birth
-                ) for p in personnel
-            ]
+                id=p.id,
+                avatar_url=p.avatar_url,
+                name=p.name,
+                surname=p.surname,
+                username=p.username,  # ← ДОБАВЬТЕ ЭТУ СТРОЧКУ
+                patronymic=p.patronymic,
+                role=p.role,
+                email=p.email,
+                tg=p.tg,
+                phone_number=p.phone_number,
+                created_at=p.created_at.isoformat(),
+                is_active=p.is_active,
+                experience=p.experience,
+                date_of_birth=p.date_of_birth
+            ) for p in personnel
+        ]
         finally:
             db.close()
 
@@ -257,6 +261,8 @@ class PersonalMutation:
                 update_data['is_active'] = input.is_active
             if input.date_of_birth is not None:
                 update_data['date_of_birth'] = input.date_of_birth
+            if input.username is not None:  # ← ДОБАВЬТЕ ЭТУ ПРОВЕРКУ
+                update_data['username'] = input.username
             
             for key, value in update_data.items():
                 setattr(personal, key, value)

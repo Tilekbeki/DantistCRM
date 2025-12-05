@@ -10,6 +10,7 @@ interface EntityModalProps {
   buttonText?: string;
   buttonTitle?: string;
   defaultValues?: Record<string, any>;
+  hasDefaultValue?: boolean;
 }
 
 const EntityModal: FC<EntityModalProps> = ({
@@ -20,7 +21,8 @@ const EntityModal: FC<EntityModalProps> = ({
   onSubmit,
   buttonText = "Сохранить",
   buttonTitle = "",
-  defaultValues = {}
+  defaultValues = {},
+  hasDefaultValue=false,
 }) => {
   console.log(defaultValues)
   return (
@@ -33,6 +35,7 @@ const EntityModal: FC<EntityModalProps> = ({
       defaultValues={defaultValues}
       buttonText={buttonText}
       buttonTitle={buttonTitle}
+      hasDefaultValue={hasDefaultValue}
     />
   );
 };

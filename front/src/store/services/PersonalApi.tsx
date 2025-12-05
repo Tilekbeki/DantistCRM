@@ -1,34 +1,37 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 
-
 interface IPersonal {
-  id: number
-  username: string
-  email: string
-  password: string
-  name?: string
-  surname?: string
-  role: string
+  id: number;
+  username: string;  // ← Убедитесь, что это есть
+  email: string;
+  name?: string;
+  surname?: string;
+  role: string;
   patronymic?: string;
   isActive: boolean;
   avatarUrl: string;
   createdAt: string;
+  tg: string;
+  phoneNumber: string;
+  experience: number;
 }
 
-
 interface PersonalInput {
-  id: number
-  username?: string
-  email?: string
-  password?: string
-  name?: string
-  surname?: string
-  role: string
+  id?: number;
+  username?: string;  // ← Добавьте
+  email?: string;
+  password?: string;
+  name?: string;
+  surname?: string;
+  role?: string;
   patronymic?: string;
   isActive?: boolean;
+  tg?: string;
+  phoneNumber?: string;
   avatarUrl?: string;
   createdAt?: string;
+  experience?: number;
 }
 
 
@@ -65,9 +68,11 @@ export const personalApi = createApi({
                 patronymic
                 role
                 email
+                username
                 tg
                 phoneNumber
                 createdAt
+                experience
               }
             }
           `
@@ -93,8 +98,12 @@ export const personalApi = createApi({
                 password
                 role
                 avatarUrl
+                username
+                phoneNumber
+                tg
                 isActive
                 createdAt
+                experience
               }
             }
           `,
@@ -125,10 +134,14 @@ export const personalApi = createApi({
               surname: personalData.surname,
               patronymic: personalData.patronymic,
               email: personalData.email,
+              username: personalData.username,
               isActive: personalData.isActive,
               password: personalData.password,
               role: personalData.role,
-              avatarUrl: personalData.avatarUrl
+              avatarUrl: personalData.avatarUrl,
+              phoneNumber: personalData.phoneNumber,
+              tg: personalData.tg,
+              experience: personalData.experience
               
             }
           }
@@ -159,9 +172,12 @@ export const personalApi = createApi({
               patronymic: input.patronymic,
               email: input.email,
               isActive: input.isActive,
-              password: input.password,
+              username: input.username,
               role: input.role,
-              avatarUrl: input.avatarUrl
+              avatarUrl: input.avatarUrl,
+              phoneNumber: input.phoneNumber,
+              tg: input.tg,
+              experience: input.experience
             }
           }
         },

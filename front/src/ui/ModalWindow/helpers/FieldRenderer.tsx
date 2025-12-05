@@ -9,10 +9,11 @@ import CheckboxGroupField from './CheckboxGroupField';
 interface FieldRendererProps {
   field: FieldType;
   extraFieldName?: string;
+  hasDefaultValue: boolean;
 }
 
 //ниже самая важная функия для рендеринга элементов форм ее можно переиспользовать
-const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName }) => {
+const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName,hasDefaultValue=false }) => {
   switch (field.type) {
     case 'checkbox':
       return (
@@ -83,7 +84,10 @@ const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName }) => {
       );
 
     default:
-      return (
+      if(field.editableByOnlyUser && hasDefaultValue) {
+        return null
+      } else {
+        return (
         <Form.Item
           name={extraFieldName ? extraFieldName : field.name}
           rules={field.rules}
@@ -95,6 +99,8 @@ const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName }) => {
           <Input type={field.type} placeholder={field.placeholder} />
         </Form.Item>
       );
+      }
+      
   }
 };
 

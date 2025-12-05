@@ -155,6 +155,7 @@ export const personFields = [
   },
   {
     name: "password",
+    editableByOnlyUser: true,
     label: "Пароль",
     type: "password",
     placeholder: "Введите пароль",
@@ -169,6 +170,7 @@ export const personFields = [
     type: "password",
     placeholder: "Повторите пароль",
     dependencies: ["password"],
+    editableByOnlyUser: true,
     rules: [
       { required: true, message: "Подтвердите пароль" },
       ({ getFieldValue }: any) => ({
