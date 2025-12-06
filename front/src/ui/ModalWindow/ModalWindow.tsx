@@ -12,7 +12,7 @@ interface FormModalProps {
   buttonText: string;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: object) => void;
-  defaultValues?: Record<string, any>; 
+  defaultValues?: Record<string, any>;
   hasDefaultValue: boolean;
 }
 
@@ -23,7 +23,7 @@ const BaseAdminModal: FC<FormModalProps> = ({
   open,
   onOpenChange,
   buttonText,
-  defaultValues = {}, 
+  defaultValues = {},
   hasDefaultValue = false,
 }) => {
   const [form] = Form.useForm();
@@ -34,18 +34,8 @@ const BaseAdminModal: FC<FormModalProps> = ({
   };
 
   return (
-    <Modal
-      title={title}
-      open={open}
-      centered
-      onCancel={() => onOpenChange(false)}
-      footer={null}
-    >
-      <Form
-        form={form}
-        onFinish={onFinish}
-        initialValues={defaultValues} // ⭐ ключ для редактирования
-      >
+    <Modal title={title} open={open} centered onCancel={() => onOpenChange(false)} footer={null}>
+      <Form form={form} onFinish={onFinish} initialValues={defaultValues}>
         {fields.map((field) => (
           <div key={field.name}>
             <FieldRenderer field={field} hasDefaultValue={hasDefaultValue} />

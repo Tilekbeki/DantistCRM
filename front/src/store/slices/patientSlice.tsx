@@ -1,10 +1,10 @@
 // store/slices/patientSlice.tsx
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const patientSlice = createSlice({
-  name: "patients",
+  name: 'patients',
   initialState: {
-    patientsList: [],
+    patientsList: {},
     loading: false,
     error: null,
   },
@@ -12,12 +12,11 @@ const patientSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    // Добавьте reducers если нужны локальные изменения
     addPatient: (state, action) => {
-      state.patientsList.push(action.payload);
+      state.patientsList[action.payload.id] = action.payload;
     },
     removePatient: (state, action) => {
-      state.patientsList = state.patientsList.filter(p => p.id !== action.payload);
+      state.patientsList = state.patientsList.filter((p) => p.id !== action.payload);
     },
   },
 });

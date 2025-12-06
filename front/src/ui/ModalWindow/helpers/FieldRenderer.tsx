@@ -12,13 +12,12 @@ interface FieldRendererProps {
   hasDefaultValue: boolean;
 }
 
-//ниже самая важная функия для рендеринга элементов форм ее можно переиспользовать
-const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName,hasDefaultValue=false }) => {
+const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName, hasDefaultValue = false }) => {
   switch (field.type) {
     case 'checkbox':
       return (
         <>
-          {field.title && <div >{field.title}</div>}
+          {field.title && <div>{field.title}</div>}
           <Form.Item name={extraFieldName ? extraFieldName : field.name} valuePropName="checked" rules={field.rules}>
             <Checkbox>{field.label}</Checkbox>
           </Form.Item>
@@ -36,7 +35,7 @@ const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName,hasDefaul
           colon={false}
           initialValue={field.options?.[0]?.value}
         >
-          <Select options={field.options}  />
+          <Select options={field.options} />
         </Form.Item>
       );
 
@@ -70,7 +69,7 @@ const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName,hasDefaul
           })}
           normalize={(value) => (value && dayjs(value).isValid() ? `${dayjs(value).valueOf()}` : undefined)}
         >
-          <DatePicker 
+          <DatePicker
             {...(field.format === 'DD.MM.YYYY HH:mm' ? { showTime: true } : null)}
             placeholder={
               field.format === 'YYYY' ? 'ГГГГ' : field.format === 'DD.MM.YYYY' ? 'ДД.ММ.ГГГГ' : 'ДД:ММ:ГГГГ ЧЧ:ММ'
@@ -84,23 +83,22 @@ const FieldRenderer: FC<FieldRendererProps> = ({ field, extraFieldName,hasDefaul
       );
 
     default:
-      if(field.editableByOnlyUser && hasDefaultValue) {
-        return null
+      if (field.editableByOnlyUser && hasDefaultValue) {
+        return null;
       } else {
         return (
-        <Form.Item
-          name={extraFieldName ? extraFieldName : field.name}
-          rules={field.rules}
-          label={field.label}
-          {...(field.dependencies ? { dependencies: field.dependencies } : null)}
-          colon={false}
-          required={false}
-        >
-          <Input type={field.type} placeholder={field.placeholder} />
-        </Form.Item>
-      );
+          <Form.Item
+            name={extraFieldName ? extraFieldName : field.name}
+            rules={field.rules}
+            label={field.label}
+            {...(field.dependencies ? { dependencies: field.dependencies } : null)}
+            colon={false}
+            required={false}
+          >
+            <Input type={field.type} placeholder={field.placeholder} />
+          </Form.Item>
+        );
       }
-      
   }
 };
 

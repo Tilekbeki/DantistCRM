@@ -3,7 +3,6 @@ import { Form } from 'antd';
 
 import FieldRenderer from '../../ui/ModalWindow/helpers/FieldRenderer';
 
-
 const ExtraFields = ({ fields: extraFields }) => {
   return (
     <div>

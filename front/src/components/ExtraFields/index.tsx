@@ -1,3 +1,3 @@
-import ExtraFields from "./ExtraFields";
+import ExtraFields from './ExtraFields';
 
 export default ExtraFields;

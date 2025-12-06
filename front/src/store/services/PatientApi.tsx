@@ -1,37 +1,35 @@
-// store/services/DantistApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// Типы данных
 interface Patient {
-  id: number
-  name: string
-  surname: string
-  patronymic: string
-  email?: string
-  dateOfBirth?: string
-  gender: string
-  phoneNumber?: string
+  id: number;
+  name: string;
+  surname: string;
+  patronymic: string;
+  email?: string;
+  dateOfBirth?: string;
+  gender: string;
+  phoneNumber?: string;
   avatarLink: string;
-  tg?: string
-  createdAt: string
+  tg?: string;
+  createdAt: string;
 }
 
 interface PatientInput {
-  name?: string
-  surname?: string
-  patronymic?: string
-  email?: string
-  dateOfBirth?: string
-  avatarLink?: string
-  gender?: string
-  phoneNumber?: string
-  tg?: string
+  name?: string;
+  surname?: string;
+  patronymic?: string;
+  email?: string;
+  dateOfBirth?: string;
+  avatarLink?: string;
+  gender?: string;
+  phoneNumber?: string;
+  tg?: string;
 }
 
 interface QueryResult {
-  success: boolean
-  message: string
-  data?: number
+  success: boolean;
+  message: string;
+  data?: number;
 }
 
 export const patientApi = createApi({
@@ -39,13 +37,12 @@ export const patientApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://localhost:8000/graphql',
     prepareHeaders: (headers) => {
-      headers.set('Content-Type', 'application/json')
-      return headers
+      headers.set('Content-Type', 'application/json');
+      return headers;
     },
   }),
   tagTypes: ['Patient'],
   endpoints: (build) => ({
-    // Получить всех пациентов
     getPatients: build.query<{ data: { allPatients: Patient[] } }, void>({
       query: () => ({
         url: '',
@@ -67,13 +64,12 @@ export const patientApi = createApi({
                 createdAt
               }
             }
-          `
+          `,
         },
       }),
-      providesTags: ['Patient']
+      providesTags: ['Patient'],
     }),
-    
-    // Получить одного пациента по ID
+
     getPatient: build.query<{ data: { patient: Patient } }, number>({
       query: (id) => ({
         url: '',
@@ -96,13 +92,12 @@ export const patientApi = createApi({
               }
             }
           `,
-          variables: { id }
+          variables: { id },
         },
       }),
-      providesTags: (result, error, id) => [{ type: 'Patient', id }]
+      providesTags: (result, error, id) => [{ type: 'Patient', id }],
     }),
-    
-    // Создать пациента
+
     createPatient: build.mutation<{ data: { createPatient: QueryResult } }, PatientInput>({
       query: (patientData) => ({
         url: '',
@@ -127,15 +122,14 @@ export const patientApi = createApi({
               dateOfBirth: patientData.dateOfBirth,
               gender: patientData.gender?.toUpperCase() || 'MALE',
               phoneNumber: patientData.phoneNumber,
-              tg: patientData.tg
-            }
-          }
+              tg: patientData.tg,
+            },
+          },
         },
       }),
-      invalidatesTags: ['Patient']
+      invalidatesTags: ['Patient'],
     }),
-    
-    // Обновить пациента
+
     updatePatient: build.mutation<{ data: { updatePatient: QueryResult } }, { id: number; input: PatientInput }>({
       query: ({ id, input }) => ({
         url: '',
@@ -161,18 +155,14 @@ export const patientApi = createApi({
               avatarLink: input.avatarLink,
               gender: input.gender?.toUpperCase(),
               phoneNumber: input.phoneNumber,
-              tg: input.tg
-            }
-          }
+              tg: input.tg,
+            },
+          },
         },
       }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'Patient', id },
-        'Patient'
-      ]
+      invalidatesTags: (result, error, { id }) => [{ type: 'Patient', id }, 'Patient'],
     }),
-    
-    // Удалить пациента
+
     deletePatient: build.mutation<{ data: { deletePatient: QueryResult } }, number>({
       query: (id) => ({
         url: '',
@@ -187,19 +177,18 @@ export const patientApi = createApi({
               }
             }
           `,
-          variables: { id }
+          variables: { id },
         },
       }),
-      invalidatesTags: ['Patient']
+      invalidatesTags: ['Patient'],
     }),
   }),
-})
+});
 
-// Экспорт всех хуков
-export const { 
+export const {
   useGetPatientsQuery,
   useGetPatientQuery,
   useCreatePatientMutation,
   useUpdatePatientMutation,
-  useDeletePatientMutation
-} = patientApi
+  useDeletePatientMutation,
+} = patientApi;

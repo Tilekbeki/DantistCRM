@@ -1,9 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-
 interface IPersonal {
   id: number;
-  username: string;  // ← Убедитесь, что это есть
+  username: string;
   email: string;
   name?: string;
   surname?: string;
@@ -19,7 +18,7 @@ interface IPersonal {
 
 interface PersonalInput {
   id?: number;
-  username?: string;  // ← Добавьте
+  username?: string;
   email?: string;
   password?: string;
   name?: string;
@@ -34,11 +33,10 @@ interface PersonalInput {
   experience?: number;
 }
 
-
 interface QueryResult {
-  success: boolean
-  message: string
-  data?: number
+  success: boolean;
+  message: string;
+  data?: number;
 }
 
 export const personalApi = createApi({
@@ -46,13 +44,12 @@ export const personalApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://localhost:8000/graphql',
     prepareHeaders: (headers) => {
-      headers.set('Content-Type', 'application/json')
-      return headers
+      headers.set('Content-Type', 'application/json');
+      return headers;
     },
   }),
   tagTypes: ['Personal'],
   endpoints: (build) => ({
-    // Получить всех пациентов
     getPersonals: build.query<{ data: { allPersonal: IPersonal[] } }, void>({
       query: () => ({
         url: '',
@@ -75,13 +72,12 @@ export const personalApi = createApi({
                 experience
               }
             }
-          `
+          `,
         },
       }),
-      providesTags: ['Personal']
+      providesTags: ['Personal'],
     }),
-    
-    // Получить одного пациента по ID
+
     getPersonal: build.query<{ data: { personal: IPersonal } }, number>({
       query: (id) => ({
         url: '',
@@ -107,13 +103,12 @@ export const personalApi = createApi({
               }
             }
           `,
-          variables: { id }
+          variables: { id },
         },
       }),
-      providesTags: (result, error, id) => [{ type: 'Personal', id }]
+      providesTags: (result, error, id) => [{ type: 'Personal', id }],
     }),
-    
-    // Создать пациента
+
     createPersonal: build.mutation<{ data: { createPersonal: QueryResult } }, PersonalInput>({
       query: (personalData) => ({
         url: '',
@@ -141,15 +136,14 @@ export const personalApi = createApi({
               avatarUrl: personalData.avatarUrl,
               phoneNumber: personalData.phoneNumber,
               tg: personalData.tg,
-              experience: personalData.experience
-              
-            }
-          }
+              experience: personalData.experience,
+            },
+          },
         },
       }),
-      invalidatesTags: ['Personal']
+      invalidatesTags: ['Personal'],
     }),
-    
+
     updatePersonal: build.mutation<{ data: { updatePersonal: QueryResult } }, { id: number; input: PersonalInput }>({
       query: ({ id, input }) => ({
         url: '',
@@ -177,18 +171,14 @@ export const personalApi = createApi({
               avatarUrl: input.avatarUrl,
               phoneNumber: input.phoneNumber,
               tg: input.tg,
-              experience: input.experience
-            }
-          }
+              experience: input.experience,
+            },
+          },
         },
       }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'Personal', id },
-        'Personal'
-      ]
+      invalidatesTags: (result, error, { id }) => [{ type: 'Personal', id }, 'Personal'],
     }),
-    
-    // Удалить пациента
+
     deletePersonal: build.mutation<{ data: { deletePersonal: QueryResult } }, number>({
       query: (id) => ({
         url: '',
@@ -203,19 +193,18 @@ export const personalApi = createApi({
               }
             }
           `,
-          variables: { id }
+          variables: { id },
         },
       }),
-      invalidatesTags: ['Personal']
+      invalidatesTags: ['Personal'],
     }),
   }),
-})
+});
 
-// Экспорт всех хуков
-export const { 
+export const {
   useGetPersonalsQuery,
   useGetPersonalQuery,
   useCreatePersonalMutation,
   useUpdatePersonalMutation,
-  useDeletePersonalMutation
-} = personalApi
+  useDeletePersonalMutation,
+} = personalApi;

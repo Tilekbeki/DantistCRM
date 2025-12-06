@@ -1,6 +1,5 @@
 import { Form, Checkbox } from 'antd';
 
-//вспомогательный компонент для отрисовки чекбоксов
 const CheckboxGroupField = ({ field }) => {
   const { checkboxes, title } = field;
 

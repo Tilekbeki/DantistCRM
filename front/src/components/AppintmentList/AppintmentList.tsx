@@ -1,165 +1,116 @@
-
-import { useAppSelector } from '../../store/hooks';
+import { useSelector } from 'react-redux';
 import { Table, Tag, Space, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import {  PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
+import { PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
+import { useGetAppointmentsQuery } from '../../store/services/AppointmentsApi';
+import dayjs from 'dayjs';
 
 const { Text } = Typography;
 
-interface PatientType {
-  key: React.Key;
+interface IAppointment {
   id: number;
-  firstName: string;
-  lastName: string;
+  patientId: number;
+  doctorId: number;
+  serviceId: number;
+  visitDate: string;
   createdAt: string;
-  gender: string;
-  phone_number?: string;
-  tgUsername?: string;
-  address?: string;
   status: string;
 }
 
 const AppintmentList: React.FC = () => {
- 
-  const { items: patients, loading } = useAppSelector((state) => state.patients);
+  const { data: appointmentsData, isLoading }  = useGetAppointmentsQuery()
+  const appointments = appointmentsData?.data?.allAppointments || [];
+  const patients = useSelector(store=>store.patients.patientsList);
+  const personals = useSelector(store=>store.personals.personalsList);
 
- 
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'green';
-      case 'inactive':
-        return 'red';
-      case 'new':
-        return 'blue';
-      case 'examined':
-        return 'orange';
-      case 'treatment':
-        return 'purple';
-      case 'recovered':
-        return 'green';
-      default:
-        return 'default';
-    }
-  };
-
-
- 
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Активен';
-      case 'inactive':
-        return 'Неактивен';
-      case 'new':
-        return 'Новый';
-      case 'examined':
-        return 'Осмотрен';
-      case 'treatment':
-        return 'На лечении';
-      case 'recovered':
-        return 'Выздоровел';
-      default:
-        return status;
-    }
-  };
-
-  const columns: TableColumnsType<PatientType> = [
+console.log(personals)
+  const columns: TableColumnsType<IAppointment> = [
     {
       title: 'Пациент',
       dataIndex: 'first_name',
-      key: 'first_name',
+      key: 'patient_name',
       render: (_, record) => (
         <a href={`/patients/${record.id}`} className="font-semibold text-blue-600 hover:underline">
-          {record.firstName} {record.lastName}
+          {patients[record.patientId].name} {patients[record.patientId].surname}
         </a>
       ),
     },
-     {
+    {
       title: 'Врач',
-      dataIndex: 'email',
-      key: 'email',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      dataIndex: 'personal',
+      key: 'personal',
+      render: (_, record) =>(
+        <a href={`/doctors/${record.id}`} className="font-semibold text-blue-600 hover:underline">
+          {personals[record.doctorId].name} {personals[record.doctorId].surname}
+        </a>
+      ),
     },
     {
-      title: 'Дата',
+      title: 'Дата приема',
       dataIndex: 'phone_number',
       key: 'phone_number',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      render: (_, record) => dayjs(record.visitDate).format('DD.MM.YYYY HH:MM') || <Text type="secondary">—</Text>,
     },
     {
-      title: 'Время',
+      title: 'Услуга',
       dataIndex: 'role',
       key: 'role',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      render: (_, record) => record.serviceId || <Text type="secondary">—</Text>,
     },
     {
       title: 'Статус',
       dataIndex: 'occupation',
       key: 'occupation',
-      render: (phone?: string) => phone || <Text type="secondary">—</Text>,
+      render: (_, record) => record.status || <Text type="secondary">—</Text>,
     },
     {
-      title: 'Примечания',
-      dataIndex: 'tgUsername',
-      key: 'tgUsername',
-      render: (tg?: string) =>
-        tg ? (
-          <Text>@{tg}</Text>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
+      title: 'Удалить',
+      dataIndex: '',
+      key: 'x',
+      render: () => <a>Удалить</a>,
     },
-     {
-    title: 'Удалить',
-    dataIndex: '',
-    key: 'x',
-    render: () => <a>Удалить</a>,
-  },
   ];
 
-  const data: PatientType[] = patients.map((p) => ({
+  const data: IAppointment[] = appointments.map((p) => ({
     key: p.id,
     ...p,
   }));
 
   return (
-      <Table<PatientType>
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        pagination={{ pageSize: 8 }}
-        expandable={{
-          expandedRowRender: (record) => (
-            <div className="p-3 bg-gray-50 rounded-md">
-              <Space direction="vertical">
-                <Space>
-                  <CalendarOutlined />
-                  <Text>Дата создания: {new Date(record.createdAt).toLocaleDateString('ru-RU')}</Text>
-                </Space>
-                {record.phone_number && (
-                  <Space>
-                    <PhoneOutlined />
-                    <Text>Телефон: {record.phone_number}</Text>
-                  </Space>
-                )}
-                {record.tgUsername && (
-                  <Space>
-                    <Text type="secondary">Telegram: @{record.tgUsername}</Text>
-                  </Space>
-                )}
-                {record.address && (
-                  <Space>
-                    <Text type="secondary">Адрес: {record.address}</Text>
-                  </Space>
-                )}
+    <Table<IAppointment>
+      columns={columns}
+      dataSource={data}
+      loading={isLoading}
+      pagination={{ pageSize: 8 }}
+      expandable={{
+        expandedRowRender: (record) => (
+          <div className="p-3 bg-gray-50 rounded-md">
+            {/* <Space direction="vertical">
+              <Space>
+                <CalendarOutlined />
+                <Text>Дата создания: {new Date(record.createdAt).toLocaleDateString('ru-RU')}</Text>
               </Space>
-            </div>
-          ),
-        }}
-      />
+              {record.phone_number && (
+                <Space>
+                  <PhoneOutlined />
+                  <Text>Телефон: {record.phone_number}</Text>
+                </Space>
+              )}
+              {record.tgUsername && (
+                <Space>
+                  <Text type="secondary">Telegram: @{record.tgUsername}</Text>
+                </Space>
+              )}
+              {record.address && (
+                <Space>
+                  <Text type="secondary">Адрес: {record.address}</Text>
+                </Space>
+              )}
+            </Space> */}
+          </div>
+        ),
+      }}
+    />
   );
 };
 

@@ -1,7 +1,11 @@
 import { Table, notification, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { useState, useEffect } from 'react'; // Добавлен useEffect
-import { useGetPatientsQuery, useDeletePatientMutation, useUpdatePatientMutation } from '../../store/services/PatientApi';
+import {
+  useGetPatientsQuery,
+  useDeletePatientMutation,
+  useUpdatePatientMutation,
+} from '../../store/services/PatientApi';
 const { Text } = Typography;
 import { patientFields } from '../Fields/patientFields';
 import EntityModal from '../EntityModal/EntityModal';
@@ -27,7 +31,6 @@ interface formData extends PatientType {
 }
 
 const PatientsList: React.FC = () => {
-  
   const { data: patientsData, isLoading } = useGetPatientsQuery();
   const [deletePatient] = useDeletePatientMutation();
   const [updatePatient] = useUpdatePatientMutation();
@@ -64,28 +67,27 @@ const PatientsList: React.FC = () => {
   }, [isModalOpen]);
 
   const handleSubmit = (formData: formData) => {
-    console.log(formData.dateOfBirth, 'дата', dayjs(+formData.dateOfBirth).format("YYYY-MM-DD"));
-    
+    console.log(formData.dateOfBirth, 'дата', dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
+
     const formattedData = {
       ...formData,
       dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
     };
 
-    console.log("Updated data:", dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
-    
+    console.log('Updated data:', dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
+
     updatePatient({
       id: selectedPatient?.id,
-      input: formattedData
+      input: formattedData,
     })
-    .unwrap()
-    .then(() => {
-      openNotificationWithIcon('success');
-    })
-    .catch((error) => {
-      console.error('Ошибка при обновлении:', error);
-    });
-    
-    // Закрываем модалку и сбрасываем пациента
+      .unwrap()
+      .then(() => {
+        openNotificationWithIcon('success');
+      })
+      .catch((error) => {
+        console.error('Ошибка при обновлении:', error);
+      });
+
     handleModalClose();
   };
 
@@ -114,7 +116,7 @@ const PatientsList: React.FC = () => {
       title: 'Пол',
       dataIndex: 'gender',
       key: 'gender',
-      render: (_, record) => record.gender === 'male' ? 'Мужской' : 'Женский',
+      render: (_, record) => (record.gender === 'male' ? 'Мужской' : 'Женский'),
     },
     {
       title: 'Телефон',
@@ -126,11 +128,7 @@ const PatientsList: React.FC = () => {
       title: 'Редактировать',
       key: 'edit',
       render: (_, record) => (
-        <a 
-          key={`link-${record.id}`} 
-          onClick={() => openEditModal(record)}
-          style={{ cursor: 'pointer' }}
-        >
+        <a key={`link-${record.id}`} onClick={() => openEditModal(record)} style={{ cursor: 'pointer' }}>
           Редактировать
         </a>
       ),
@@ -139,7 +137,7 @@ const PatientsList: React.FC = () => {
       title: 'Удалить',
       key: 'delete',
       render: (_, record) => (
-        <a 
+        <a
           onClick={() => {
             deletePatient(record.id);
           }}
@@ -159,13 +157,7 @@ const PatientsList: React.FC = () => {
   return (
     <>
       {contextHolder}
-      <Table
-        columns={columns}
-        dataSource={data}
-        loading={isLoading}
-        pagination={{ pageSize: 8 }}
-        rowKey="id"
-      />
+      <Table columns={columns} dataSource={data} loading={isLoading} pagination={{ pageSize: 8 }} rowKey="id" />
 
       <EntityModal
         open={isModalOpen}
@@ -175,7 +167,7 @@ const PatientsList: React.FC = () => {
         defaultValues={selectedPatient || {}}
         buttonText="Сохранить изменения"
         onSubmit={handleSubmit}
-        key={selectedPatient?.id || 'modal'} // Ключ для принудительного ререндера
+        key={selectedPatient?.id || 'modal'}
       />
     </>
   );

@@ -1,3 +1,3 @@
-import PatientsList from "./PatientsList";
+import PatientsList from './PatientsList';
 
 export default PatientsList;

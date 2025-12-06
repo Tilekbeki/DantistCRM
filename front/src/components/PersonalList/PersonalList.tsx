@@ -1,6 +1,10 @@
 import { Table, Tag, Space, Typography, notification } from 'antd';
 import type { TableColumnsType } from 'antd';
-import { useGetPersonalsQuery, useDeletePersonalMutation,useUpdatePersonalMutation } from '../../store/services/PersonalApi';
+import {
+  useGetPersonalsQuery,
+  useDeletePersonalMutation,
+  useUpdatePersonalMutation,
+} from '../../store/services/PersonalApi';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { personFields } from '../Fields/personalField';
@@ -20,14 +24,13 @@ interface IPersonal {
   dateOfBirth: string;
 }
 
-
 const PersonalList: React.FC = () => {
   const [selectedPersonal, setSelectedPersonal] = useState<IPersonal | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false)
- const { data: personalsData, isLoading, error } = useGetPersonalsQuery();
- const [deletePersonal] = useDeletePersonalMutation();
- const [updatePersonal] = useUpdatePersonalMutation();
- const personals = personalsData?.data?.allPersonal || [];
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: personalsData, isLoading, error } = useGetPersonalsQuery();
+  const [deletePersonal] = useDeletePersonalMutation();
+  const [updatePersonal] = useUpdatePersonalMutation();
+  const personals = personalsData?.data?.allPersonal || [];
 
   type NotificationType = 'success';
 
@@ -38,53 +41,50 @@ const PersonalList: React.FC = () => {
     });
   };
 
-    const openEditModal = (personal: IPersonal) => {
-      setSelectedPersonal({
-        ...personal,
-        dateOfBirth: dayjs(personal.dateOfBirth),
-      });
-      setIsModalOpen(true);
+  const openEditModal = (personal: IPersonal) => {
+    setSelectedPersonal({
+      ...personal,
+      dateOfBirth: dayjs(personal.dateOfBirth),
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedPersonal(null);
+  };
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setSelectedPersonal(null);
+    }
+  }, [isModalOpen]);
+
+  const handleSubmit = (formData: formData) => {
+    console.log(formData.dateOfBirth, 'дата', dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
+
+    const formattedData = {
+      ...formData,
+      dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
     };
 
-    
-      const handleModalClose = () => {
-        setIsModalOpen(false);
-        setSelectedPersonal(null);
-      };
-    
-      useEffect(() => {
-        if (!isModalOpen) {
-          setSelectedPersonal(null);
-        }
-      }, [isModalOpen]);
+    console.log('Updated data:', dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
 
+    updatePersonal({
+      id: selectedPersonal?.id,
+      input: formattedData,
+    })
+      .unwrap()
+      .then(() => {
+        openNotificationWithIcon('success');
+      })
+      .catch((error) => {
+        console.error('Ошибка при обновлении:', error);
+      });
 
-        const handleSubmit = (formData: formData) => {
-          console.log(formData.dateOfBirth, 'дата', dayjs(+formData.dateOfBirth).format("YYYY-MM-DD"));
-          
-          const formattedData = {
-            ...formData,
-            dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
-          };
-      
-          console.log("Updated data:", dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'));
-          
-          updatePersonal({
-            id: selectedPersonal?.id,
-            input: formattedData
-          })
-          .unwrap()
-          .then(() => {
-            openNotificationWithIcon('success');
-          })
-          .catch((error) => {
-            console.error('Ошибка при обновлении:', error);
-          });
-          
-          // Закрываем модалку и сбрасываем пациента
-          handleModalClose();
-        };
-    
+    handleModalClose();
+  };
+
   const columns: TableColumnsType<IPersonal> = [
     {
       title: 'ФИО',
@@ -96,11 +96,11 @@ const PersonalList: React.FC = () => {
         </a>
       ),
     },
-     {  
+    {
       title: 'email',
       dataIndex: 'email',
       key: 'email',
-      render: (_, record) => record.email || <Text type="secondary">—</Text>
+      render: (_, record) => record.email || <Text type="secondary">—</Text>,
     },
     {
       title: 'Телефон',
@@ -118,22 +118,13 @@ const PersonalList: React.FC = () => {
       title: 'Telegram',
       dataIndex: 'tgUsername',
       key: 'tgUsername',
-      render: (_,record) =>
-        record.tg ? (
-          <Text>{record.tg}</Text>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
+      render: (_, record) => (record.tg ? <Text>{record.tg}</Text> : <Text type="secondary">—</Text>),
     },
     {
       title: 'Редактировать',
       key: 'edit',
       render: (_, record) => (
-        <a 
-          key={`link-${record.id}`} 
-          onClick={() => openEditModal(record)}
-          style={{ cursor: 'pointer' }}
-        >
+        <a key={`link-${record.id}`} onClick={() => openEditModal(record)} style={{ cursor: 'pointer' }}>
           Редактировать
         </a>
       ),
@@ -142,7 +133,7 @@ const PersonalList: React.FC = () => {
       title: 'Удалить',
       dataIndex: '',
       key: 'delete',
-      render: (_,record) => <a onClick={()=>deletePersonal(record.id)}>Удалить</a>,
+      render: (_, record) => <a onClick={() => deletePersonal(record.id)}>Удалить</a>,
     },
   ];
 
@@ -152,9 +143,8 @@ const PersonalList: React.FC = () => {
   }));
 
   return (
-  <>
-      
-  <Table<IPersonal>
+    <>
+      <Table<IPersonal>
         columns={columns}
         dataSource={data}
         loading={isLoading}
@@ -188,19 +178,18 @@ const PersonalList: React.FC = () => {
           ),
         }}
       />
-        <EntityModal
-          open={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          title="Редактирование персонала"
-          fields={personFields}
-          defaultValues={selectedPersonal || {}}
-          buttonText="Сохранить изменения"
-          onSubmit={handleSubmit}
-          key={setSelectedPersonal?.id || 'modal'}
-          hasDefaultValue={true} // Ключ для принудительного ререндера
-        />
-  </>
-     
+      <EntityModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title="Редактирование персонала"
+        fields={personFields}
+        defaultValues={selectedPersonal || {}}
+        buttonText="Сохранить изменения"
+        onSubmit={handleSubmit}
+        key={setSelectedPersonal?.id || 'modal'}
+        hasDefaultValue={true}
+      />
+    </>
   );
 };
 

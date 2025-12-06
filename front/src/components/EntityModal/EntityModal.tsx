@@ -1,5 +1,5 @@
-import type { FC } from "react";
-import BaseAdminModal from "../../ui/ModalWindow/ModalWindow";
+import type { FC } from 'react';
+import BaseAdminModal from '../../ui/ModalWindow/ModalWindow';
 
 interface EntityModalProps {
   open: boolean;
@@ -19,12 +19,12 @@ const EntityModal: FC<EntityModalProps> = ({
   fields,
   title,
   onSubmit,
-  buttonText = "Сохранить",
-  buttonTitle = "",
+  buttonText = 'Сохранить',
+  buttonTitle = '',
   defaultValues = {},
-  hasDefaultValue=false,
+  hasDefaultValue = false,
 }) => {
-  console.log(defaultValues)
+  console.log(defaultValues);
   return (
     <BaseAdminModal
       title={title}

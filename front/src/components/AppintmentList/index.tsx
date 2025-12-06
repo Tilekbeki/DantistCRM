@@ -1,3 +1,3 @@
-import AppintmentList from "./AppintmentList";
+import AppintmentList from './AppintmentList';
 
 export default AppintmentList;

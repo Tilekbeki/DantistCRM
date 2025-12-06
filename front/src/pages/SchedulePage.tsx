@@ -67,13 +67,12 @@ const SchedulePage: React.FC = () => {
   };
 
   return (
-  
     <TemplatePage title="Расписание" description="Просмотр и управление расписанием">
-       <div >
-         <ConfigProvider locale={ruRU}>
-          <Calendar style={{width: '80%'}} cellRender={cellRender} />
+      <div>
+        <ConfigProvider locale={ruRU}>
+          <Calendar style={{ width: '80%' }} cellRender={cellRender} />
         </ConfigProvider>
-       </div>
+      </div>
     </TemplatePage>
   );
 };

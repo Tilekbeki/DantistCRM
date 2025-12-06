@@ -7,17 +7,16 @@ import {
   IdcardOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
-import { useAppDispatch } from '../../store/hooks';
+import { useDispatch } from 'react-redux';
 import { changePage } from '../../store/slices/pageSlice';
 import { NavLink, useLocation } from 'react-router-dom';
 
 const { Sider } = Layout;
 
 const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const location = useLocation();
 
-  // связываем активный пункт с текущим путём
   const selectedKey = (() => {
     if (location.pathname === '/') return '1';
     if (location.pathname === '/patients') return '2';
@@ -44,7 +43,7 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
       <Menu
         theme="light"
         mode="inline"
-        selectedKeys={[selectedKey]} 
+        selectedKeys={[selectedKey]}
         style={{ border: 'none', padding: '1rem' }}
         items={[
           {

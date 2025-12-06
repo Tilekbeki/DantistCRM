@@ -14,7 +14,6 @@ export enum RoleEnum {
 
 
 
-// Интерфейс для персоны
 export interface IPersonal {
   id?: number;
   avatarUrl?: string;
@@ -33,7 +32,6 @@ export interface IPersonal {
   experience: number;
 }
 
-// Массив полей для формы
 export const personFields = [
   {
     name: "surname",
@@ -201,5 +199,3 @@ export const personFields = [
     valuePropName: "checked",
   },
 ];
-
-// Константы для фильтров и сортиров

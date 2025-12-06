@@ -1,9 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
-
-
+import { createSlice } from '@reduxjs/toolkit';
 
 const pageReducer = createSlice({
-  name: "pages",
+  name: 'pages',
   initialState: {
     currentPage: 'homePage',
   },
@@ -13,7 +11,6 @@ const pageReducer = createSlice({
     },
   },
 });
-
 
 export const { changePage } = pageReducer.actions;
 export default pageReducer.reducer;
