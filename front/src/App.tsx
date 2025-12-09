@@ -1,7 +1,7 @@
 import React from 'react';
 import { Layout, theme } from 'antd';
 import SideBar from './components/SideBar';
-import { PatientsPage, AppintmentsPage, MedicalCardsPage, SchedulePage, PersonalPage, HomePage } from './pages';
+import { PatientsPage, AppintmentsPage, MedicalCardsPage, SchedulePage, PersonalPage, HomePage, ServicesPage } from './pages';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useGetPatientsQuery } from './store/services/PatientApi';
 import { useGetPersonalsQuery } from './store/services/PersonalApi';
@@ -35,6 +35,7 @@ const App: React.FC = () => {
               <Route path="/medicalcards" element={<MedicalCardsPage />} />
               <Route path="/schedule" element={<SchedulePage />} />
               <Route path="/personal" element={<PersonalPage />} />
+              <Route path="/services" element={<ServicesPage/>} />
             </Routes>
           </Layout.Content>
         </Layout>

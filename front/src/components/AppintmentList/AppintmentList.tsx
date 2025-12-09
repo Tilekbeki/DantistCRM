@@ -4,7 +4,6 @@ import type { TableColumnsType } from 'antd';
 import { PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useGetAppointmentsQuery } from '../../store/services/AppointmentsApi';
 import dayjs from 'dayjs';
-
 const { Text } = Typography;
 
 interface IAppointment {
@@ -22,6 +21,7 @@ const AppintmentList: React.FC = () => {
   const appointments = appointmentsData?.data?.allAppointments || [];
   const patients = useSelector(store=>store.patients.patientsList);
   const personals = useSelector(store=>store.personals.personalsList);
+  const services = useSelector(store=>store.services.servicesList);
 
 console.log(personals)
   const columns: TableColumnsType<IAppointment> = [
@@ -55,7 +55,7 @@ console.log(personals)
       title: 'Услуга',
       dataIndex: 'role',
       key: 'role',
-      render: (_, record) => record.serviceId || <Text type="secondary">—</Text>,
+      render: (_, record) => `${services[record.serviceId].name}` || <Text type="secondary">—</Text>,
     },
     {
       title: 'Статус',

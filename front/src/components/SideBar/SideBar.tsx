@@ -76,6 +76,11 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
             icon: <IdcardOutlined />,
             label: <NavLink to="/medicalcards">Мед. карта</NavLink>,
           },
+          {
+            key: '7',
+            icon: <IdcardOutlined />,
+            label: <NavLink to="/services">Услуги</NavLink>,
+          },
         ]}
         onClick={(e) => {
           const pageKeys: Record<string, string> = {

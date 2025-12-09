@@ -3,10 +3,12 @@ import { Users, Calendar, UserCog, Activity } from 'lucide-react';
 import TemplatePage from './TemplatePage';
 import { useGetPatientsQuery } from '../store/services/PatientApi';
 import { useGetPersonalsQuery } from '../store/services/PersonalApi';
+import { useGetServicesQuery } from '../store/services/ServiceApi';
 import { useEffect } from 'react';
 import { addPatient, removePatient } from '../store/slices/patientSlice';
 import { addPersonal } from '../store/slices/personalSlice';
 import { useSelector,useDispatch } from 'react-redux';
+import { addCategory, addService } from '../store/slices/serviceSlice';
 
 const StatCard = ({
   title,
@@ -38,11 +40,14 @@ const StatCard = ({
 const HomePage = () => {
   const { data: patientsData, isLoading, error } = useGetPatientsQuery();
   const { data: personalsData } = useGetPersonalsQuery();
+  const {data: servicesData} = useGetServicesQuery();
   const dispatch = useDispatch();
   const patients = patientsData?.data?.allPatients || [];
   const personals = personalsData?.data?.allPersonal || [];
+  const services = servicesData?.data?.allServices || [];
+  const categoriesList = servicesData?.data?.allCategories || {};
 
-  console.log(personals);
+  console.log(services);
 
   useEffect(() => {
     if (patients.length > 0) {
@@ -55,8 +60,18 @@ const HomePage = () => {
           dispatch(addPersonal(personal));
         });
       }
+      if(services.length>0) {
+        services.forEach((service) => {
+          dispatch(addService(service));
+        });
+      }
+      if(categoriesList.length > 0){
+        categoriesList.forEach((category: any) => {
+          dispatch(addCategory(category));
+        });
+      }
     }
-  }, [personals, patients, dispatch]);
+  }, [personals, patients,services, categoriesList, dispatch]);
 
   const content = (
     <div className="flex gap-4 flex-wrap">

@@ -34,6 +34,8 @@ const PersonalList: React.FC = () => {
 
   type NotificationType = 'success';
 
+  const [api, contextHolder] = notification.useNotification();
+
   const openNotificationWithIcon = (type: NotificationType) => {
     api[type]({
       title: 'Success!',
@@ -144,6 +146,7 @@ const PersonalList: React.FC = () => {
 
   return (
     <>
+    {contextHolder}
       <Table<IPersonal>
         columns={columns}
         dataSource={data}

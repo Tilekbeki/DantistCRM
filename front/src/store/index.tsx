@@ -2,22 +2,24 @@
 import { configureStore } from '@reduxjs/toolkit';
 import patientReducer from './slices/patientSlice';
 import pageReducer from './slices/pageSlice';
-import { patientApi } from './services/PatientApi';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import { personalApi } from './services/PersonalApi';
 import personalReducer from './slices/personalSlice';
-import { appointmentApi } from './services/AppointmentsApi';
+import {serviceApi, appointmentApi, personalApi, patientApi} from './services'
+import serviceReducer from './slices/serviceSlice';
 
 export const store = configureStore({
   reducer: {
     patients: patientReducer,
     personals: personalReducer,
     pages: pageReducer,
+    services: serviceReducer,
     [patientApi.reducerPath]: patientApi.reducer,
     [personalApi.reducerPath]: personalApi.reducer,
     [appointmentApi.reducerPath]: appointmentApi.reducer,
+    [serviceApi.reducerPath]: serviceApi.reducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(patientApi.middleware, personalApi.middleware, appointmentApi.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware()
+    .concat(patientApi.middleware, personalApi.middleware, appointmentApi.middleware,serviceApi.middleware),
 });
 
 setupListeners(store.dispatch);
