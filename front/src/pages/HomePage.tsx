@@ -89,7 +89,7 @@ const HomePage = () => {
 
   if (error) {
     return (
-      <TemplatePage title="Панель управления" description="Ошибка загрузки данных">
+      <TemplatePage title="Дэшборд" description="Ошибка загрузки данных">
         <div className="text-red-500">Ошибка: Не удалось загрузить данные пациентов</div>
       </TemplatePage>
     );

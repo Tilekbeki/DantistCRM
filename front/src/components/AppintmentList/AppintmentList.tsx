@@ -16,6 +16,8 @@ interface IAppointment {
   status: string;
 }
 
+
+
 const AppintmentList: React.FC = () => {
   const { data: appointmentsData, isLoading }  = useGetAppointmentsQuery()
   const appointments = appointmentsData?.data?.allAppointments || [];
