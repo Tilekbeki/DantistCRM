@@ -1,21 +1,51 @@
 import type { FormProps } from 'antd';
 import { Button, Checkbox, Form, Input } from 'antd';
+import { useLoginMutation } from '../../store/services/AuthApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAuth } from '../../store/slices/authSlice';
+import { setCookie } from '../../hooks/useParseJwt';
+import { Navigate } from 'react-router-dom';
 
 type FieldType = {
-  username?: string;
-  password?: string;
+  username: string;
+  password: string;
   remember?: string;
 };
 
-const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-  console.log('Success:', values);
-};
 
-const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
-  console.log('Failed:', errorInfo);
-};
 
 const LoginForm = () => {
+  const dispatch = useDispatch();
+  const [login] = useLoginMutation();
+  const isAuth = useSelector((state) => state.auth.isAuth);
+  const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+    console.log('Success:', values);
+    const userData = {
+      username: values.username,
+      password: values.password,
+    }
+    login(userData).then(res=>{
+      console.log(res);
+      setCookie('access_token', res.data?.data.login.accessToken, {secure: true, 'max-age': 3600})
+      dispatch(setAuth({
+        user: {
+          id: 1,
+          username: res.data?.data.login.username,
+          role: 'sadasd',
+        },
+        token: res.data?.data.login.accessToken,
+        isAuth: true
+      }))
+    })
+  };
+
+  const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
+    console.log('Failed:', errorInfo);
+  };
+  if(isAuth) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <Form
       name="basic"

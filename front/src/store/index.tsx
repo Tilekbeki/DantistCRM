@@ -4,8 +4,9 @@ import patientReducer from './slices/patientSlice';
 import pageReducer from './slices/pageSlice';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import personalReducer from './slices/personalSlice';
-import {serviceApi, appointmentApi, personalApi, patientApi} from './services'
+import {serviceApi, appointmentApi, personalApi, patientApi, authApi} from './services'
 import serviceReducer from './slices/serviceSlice';
+import authReducer from './slices/authSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,13 +14,15 @@ export const store = configureStore({
     personals: personalReducer,
     pages: pageReducer,
     services: serviceReducer,
+    auth: authReducer,
+    [authApi.reducerPath]: authApi.reducer,
     [patientApi.reducerPath]: patientApi.reducer,
     [personalApi.reducerPath]: personalApi.reducer,
     [appointmentApi.reducerPath]: appointmentApi.reducer,
     [serviceApi.reducerPath]: serviceApi.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware()
-    .concat(patientApi.middleware, personalApi.middleware, appointmentApi.middleware,serviceApi.middleware),
+    .concat(patientApi.middleware, personalApi.middleware, appointmentApi.middleware,serviceApi.middleware, authApi.middleware),
 });
 
 setupListeners(store.dispatch);
