@@ -28,11 +28,9 @@ const LoginForm = () => {
       console.log(res);
       setCookie('access_token', res.data?.data.login.accessToken, {secure: true, 'max-age': 3600})
       dispatch(setAuth({
-        user: {
-          id: 1,
-          username: res.data?.data.login.username,
-          role: 'sadasd',
-        },
+        id: 1,
+        username: res.data?.data.login.username,
+        role: res.data?.data.login.role,
         token: res.data?.data.login.accessToken,
         isAuth: true
       }))

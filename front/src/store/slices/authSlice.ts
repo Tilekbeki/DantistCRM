@@ -10,6 +10,7 @@ interface AuthState {
   isAuth: boolean;
   user: User | null;
   token: null;
+  role: null;
   id: null;
 }
 
@@ -17,6 +18,7 @@ const initialState: AuthState = {
   isAuth: false,
   user: null,
   token: null,
+  role: null,
   id: null
 };
 
@@ -27,12 +29,14 @@ const authSlice = createSlice({
     setAuth(state, action) {
       state.isAuth = true;
       state.user = action.payload;
+      state.role = action.payload.role;
       state.token = action.payload.token;
       state.id = action.payload.userId;
     },
     clearAuth(state) {
       state.isAuth = false;
       state.user = null;
+      state.role = null
       state.token = null;
       state.id = null;
     },

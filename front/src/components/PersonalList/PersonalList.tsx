@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { personFields } from '../Fields/personalField';
 import EntityModal from '../EntityModal/EntityModal';
+import { useSelector } from 'react-redux';
 
 const { Text } = Typography;
 
@@ -31,6 +32,8 @@ const PersonalList: React.FC = () => {
   const [deletePersonal] = useDeletePersonalMutation();
   const [updatePersonal] = useUpdatePersonalMutation();
   const personals = personalsData?.data?.allPersonal || [];
+  const role = useSelector(state=>state.auth.role)
+  console.log(role, 'roleeeeee')
 
   type NotificationType = 'success';
 
@@ -87,57 +90,58 @@ const PersonalList: React.FC = () => {
     handleModalClose();
   };
 
-  const columns: TableColumnsType<IPersonal> = [
-    {
-      title: 'ФИО',
-      dataIndex: 'first_name',
-      key: 'first_name',
-      render: (_, record) => (
-        <a href={`/patients/${record.id}`} className="font-semibold text-blue-600 hover:underline">
-          {record.name} {record.surname}
-        </a>
-      ),
-    },
-    {
-      title: 'email',
-      dataIndex: 'email',
-      key: 'email',
-      render: (_, record) => record.email || <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Телефон',
-      dataIndex: 'phone_number',
-      key: 'phone_number',
-      render: (_, record) => record.phoneNumber || <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Роль',
-      dataIndex: 'role',
-      key: 'role',
-      render: (_, record) => record.role || <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Telegram',
-      dataIndex: 'tgUsername',
-      key: 'tgUsername',
-      render: (_, record) => (record.tg ? <Text>{record.tg}</Text> : <Text type="secondary">—</Text>),
-    },
-    {
-      title: 'Редактировать',
-      key: 'edit',
-      render: (_, record) => (
-        <a key={`link-${record.id}`} onClick={() => openEditModal(record)} style={{ cursor: 'pointer' }}>
-          Редактировать
-        </a>
-      ),
-    },
-    {
-      title: 'Удалить',
-      dataIndex: '',
-      key: 'delete',
-      render: (_, record) => <a onClick={() => deletePersonal(record.id)}>Удалить</a>,
-    },
-  ];
+ const columns: TableColumnsType<IPersonal> = [
+  {
+    title: 'ФИО',
+    dataIndex: 'first_name',
+    key: 'first_name',
+    render: (_, record) => (
+      <a href={`/patients/${record.id}`} className="font-semibold text-blue-600 hover:underline">
+        {record.name} {record.surname}
+      </a>
+    ),
+  },
+  {
+    title: 'email',
+    dataIndex: 'email',
+    key: 'email',
+    render: (_, record) => record.email || <Text type="secondary">—</Text>,
+  },
+  {
+    title: 'Телефон',
+    dataIndex: 'phone_number',
+    key: 'phone_number',
+    render: (_, record) => record.phoneNumber || <Text type="secondary">—</Text>,
+  },
+  {
+    title: 'Роль',
+    dataIndex: 'role',
+    key: 'role',
+    render: (_, record) => record.role || <Text type="secondary">—</Text>,
+  },
+  {
+    title: 'Telegram',
+    dataIndex: 'tgUsername',
+    key: 'tgUsername',
+    render: (_, record) => (record.tg ? <Text>{record.tg}</Text> : <Text type="secondary">—</Text>),
+  },
+  ...(role=== 'admin' ? [{
+    title: 'Редактировать',
+    key: 'edit',
+    render: (_, record) => (
+      <a key={`link-${record.id}`} onClick={() => openEditModal(record)} style={{ cursor: 'pointer' }}>
+        Редактировать
+      </a>
+    ),
+  }] : []),
+  // Добавляем колонку удаления только для админа
+  ...(role === 'admin' ? [{
+    title: 'Удалить',
+    dataIndex: '',
+    key: 'delete',
+    render: (_, record) => <a onClick={() => deletePersonal(record.id)}>Удалить</a>,
+  }] : [])
+]; 
 
   const data: IPersonal[] = personals.map((p) => ({
     key: p.id,
@@ -152,34 +156,6 @@ const PersonalList: React.FC = () => {
         dataSource={data}
         loading={isLoading}
         pagination={{ pageSize: 16 }}
-        expandable={{
-          expandedRowRender: (record) => (
-            <div className="p-3 bg-gray-50 rounded-md">
-              <Space direction="vertical">
-                {/* <Space>
-                  <CalendarOutlined />
-                  <Text>Дата создания: {new Date(record.createdAt).toLocaleDateString('ru-RU')}</Text>
-                </Space> */}
-                {/* {record.phone_number && (
-                  <Space>
-                    <PhoneOutlined />
-                    <Text>Телефон: {record.phone_number}</Text>
-                  </Space>
-                )}
-                {record.tgUsername && (
-                  <Space>
-                    <Text type="secondary">Telegram: @{record.tgUsername}</Text>
-                  </Space>
-                )}
-                {record.address && (
-                  <Space>
-                    <Text type="secondary">Адрес: {record.address}</Text>
-                  </Space>
-                )} */}
-              </Space>
-            </div>
-          ),
-        }}
       />
       <EntityModal
         open={isModalOpen}

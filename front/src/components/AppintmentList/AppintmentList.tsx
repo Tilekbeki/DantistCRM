@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 import { Table, Tag, Space, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { PhoneOutlined, CalendarOutlined } from '@ant-design/icons';
-import { useGetAppointmentsQuery } from '../../store/services/AppointmentsApi';
+
 import dayjs from 'dayjs';
 const { Text } = Typography;
 
@@ -19,12 +19,11 @@ interface IAppointment {
 
 
 const AppintmentList: React.FC = () => {
-  const { data: appointmentsData, isLoading }  = useGetAppointmentsQuery()
-  const appointments = appointmentsData?.data?.allAppointments || [];
+  
+  const appointments = useSelector(store=>store.appointments.appointmentsList);
   const patients = useSelector(store=>store.patients.patientsList);
   const personals = useSelector(store=>store.personals.personalsList);
   const services = useSelector(store=>store.services.servicesList);
-
 console.log(personals)
   const columns: TableColumnsType<IAppointment> = [
     {
@@ -82,7 +81,6 @@ console.log(personals)
     <Table<IAppointment>
       columns={columns}
       dataSource={data}
-      loading={isLoading}
       pagination={{ pageSize: 8 }}
       expandable={{
         expandedRowRender: (record) => (

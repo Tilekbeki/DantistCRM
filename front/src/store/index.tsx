@@ -7,6 +7,7 @@ import personalReducer from './slices/personalSlice';
 import {serviceApi, appointmentApi, personalApi, patientApi, authApi} from './services'
 import serviceReducer from './slices/serviceSlice';
 import authReducer from './slices/authSlice';
+import AppointmentsReducer from './slices/appointmentSlice';
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export const store = configureStore({
     pages: pageReducer,
     services: serviceReducer,
     auth: authReducer,
+    appointments: AppointmentsReducer,
     [authApi.reducerPath]: authApi.reducer,
     [patientApi.reducerPath]: patientApi.reducer,
     [personalApi.reducerPath]: personalApi.reducer,

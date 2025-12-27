@@ -10,6 +10,7 @@ const { Text } = Typography;
 import { patientFields } from '../Fields/patientFields';
 import EntityModal from '../EntityModal/EntityModal';
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 
 type NotificationType = 'success';
 
@@ -39,6 +40,7 @@ const PatientsList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<PatientType | null>(null);
   const [api, contextHolder] = notification.useNotification();
+  const role = useSelector(state=>state.auth.role)
 
   const openNotificationWithIcon = (type: NotificationType) => {
     api[type]({
@@ -133,7 +135,7 @@ const PatientsList: React.FC = () => {
         </a>
       ),
     },
-    {
+    ...(role === 'admin' ? [{
       title: 'Удалить',
       key: 'delete',
       render: (_, record) => (
@@ -146,7 +148,7 @@ const PatientsList: React.FC = () => {
           Удалить
         </a>
       ),
-    },
+    }] : []),
   ];
 
   const data: PatientType[] = patients.map((p) => ({
@@ -157,7 +159,7 @@ const PatientsList: React.FC = () => {
   return (
     <>
       {contextHolder}
-      <Table columns={columns} dataSource={data} loading={isLoading} pagination={{ pageSize: 8 }} rowKey="id" />
+      <Table columns={columns} dataSource={data} loading={isLoading} pagination={{ pageSize: 8 }} rowKey="id" style={{width:'100%'}}/>
 
       <EntityModal
         open={isModalOpen}

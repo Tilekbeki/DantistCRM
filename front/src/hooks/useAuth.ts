@@ -14,11 +14,9 @@ const useAuth = () => {
 
     const data = parseJwt(tokenincookie)
         dispatch(setAuth({
-        user: {
-          id: data.user_id,
-          username: data.sub,
-          role: data.role,
-        },
+        id: data.user_id,
+        username: data.sub,
+        role: data.role,
         token: tokenincookie,
         isAuth: true
       }))

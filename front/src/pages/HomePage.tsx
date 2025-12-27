@@ -4,11 +4,14 @@ import TemplatePage from './TemplatePage';
 import { useGetPatientsQuery } from '../store/services/PatientApi';
 import { useGetPersonalsQuery } from '../store/services/PersonalApi';
 import { useGetServicesQuery } from '../store/services/ServiceApi';
+import { useGetAppointmentsQuery } from '../store/services/AppointmentsApi';
 import { useEffect } from 'react';
-import { addPatient, removePatient } from '../store/slices/patientSlice';
+import { addPatient } from '../store/slices/patientSlice';
 import { addPersonal } from '../store/slices/personalSlice';
-import { useSelector,useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { addCategory, addService } from '../store/slices/serviceSlice';
+import { addAppointments } from '../store/slices/appointmentSlice';
+
 
 const StatCard = ({
   title,
@@ -41,6 +44,7 @@ const HomePage = () => {
   const { data: patientsData, isLoading, error } = useGetPatientsQuery();
   const { data: personalsData } = useGetPersonalsQuery();
   const {data: servicesData} = useGetServicesQuery();
+  const { data: appointmentsData }  = useGetAppointmentsQuery()
   const dispatch = useDispatch();
   const patients = patientsData?.data?.allPatients || [];
   const personals = personalsData?.data?.allPersonal || [];
@@ -70,8 +74,12 @@ const HomePage = () => {
           dispatch(addCategory(category));
         });
       }
+      if(appointmentsData) {
+        dispatch(addAppointments(appointmentsData.data.allAppointments));
+        console.log('appointments data',appointmentsData.data.allAppointments)
+      }
     }
-  }, [personals, patients,services, categoriesList, dispatch]);
+  }, [personals, patients,services, categoriesList, dispatch, appointmentsData]);
 
   const content = (
     <div className="flex gap-4 flex-wrap">
