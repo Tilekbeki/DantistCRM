@@ -1,67 +1,164 @@
-import PatientsList from '../components/PatientsList';
 import TemplatePage from './TemplatePage';
-import { useState } from 'react';
+import PaginationList from '../components/PaginationList';
 import EntityModal from '../components/EntityModal/EntityModal';
 import { patientFields } from '../components/Fields/patientFields';
-import { useCreatePatientMutation } from '../store/services/PatientApi';
+
+import {
+  useGetPatientsQuery,
+  useDeletePatientMutation,
+  useUpdatePatientMutation,
+  useCreatePatientMutation,
+} from '../store/services/PatientApi';
+
+import { Typography, notification } from 'antd';
+import { useSelector } from 'react-redux';
+import { useState } from 'react';
 import dayjs from 'dayjs';
 
-const PatientsPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [createPatient, { isLoading, error }] = useCreatePatientMutation();
+const { Text } = Typography;
 
-  const toggleModalState = () => {
-    console.log('clicked');
-    setIsModalOpen(!isModalOpen);
+const PatientsPage = () => {
+  const role = useSelector((state: any) => state.auth.role);
+
+  const { data, isLoading } = useGetPatientsQuery();
+  const [createPatient, { isLoading: isCreating }] = useCreatePatientMutation();
+  const [updatePatient] = useUpdatePatientMutation();
+  const [deletePatient] = useDeletePatientMutation();
+
+  const patients = data?.data?.allPatients || [];
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+
+  const [api, contextHolder] = notification.useNotification();
+
+  const notifySuccess = () =>
+    api.success({
+      message: 'Успешно',
+      description: 'Операция выполнена успешно',
+    });
+
+  // ---------- columns ----------
+  const columns = [
+    {
+      title: 'Имя',
+      render: (_: any, record: any) => (
+        <a href={`/patients/${record.id}`}>
+          {record.name} {record.surname}
+        </a>
+      ),
+    },
+    {
+      title: 'Дата рождения',
+      dataIndex: 'dateOfBirth',
+      render: (date: any) =>
+        date ? dayjs(date).format('DD.MM.YYYY') : <Text type="secondary">—</Text>,
+    },
+    {
+      title: 'Пол',
+      dataIndex: 'gender',
+      render: (v: string) => (v === 'male' ? 'Мужской' : 'Женский'),
+    },
+    {
+      title: 'Телефон',
+      dataIndex: 'phoneNumber',
+      render: (v: string) => v || <Text type="secondary">—</Text>,
+    },
+    {
+      title: 'Редактировать',
+      render: (_: any, record: any) => (
+        <a
+          onClick={() => {
+            setSelectedPatient({
+              ...record,
+              dateOfBirth: dayjs(record.dateOfBirth),
+            });
+            setIsEditModalOpen(true);
+          }}
+        >
+          Редактировать
+        </a>
+      ),
+    },
+    ...(role === 'admin'
+      ? [
+          {
+            title: 'Удалить',
+            render: (_: any, record: any) => (
+              <a onClick={() => deletePatient(record.id)}>Удалить</a>
+            ),
+          },
+        ]
+      : []),
+  ];
+
+  // ---------- data ----------
+  const dataSource = patients.map((p: any) => ({
+    key: p.id,
+    ...p,
+  }));
+
+  // ---------- handlers ----------
+  const handleCreate = async (formData: any) => {
+    await createPatient({
+      ...formData,
+      dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
+    }).unwrap();
+
+    notifySuccess();
+    setIsCreateModalOpen(false);
   };
 
-  const handleOk = async (data: any) => {
-    console.log('Данные для создания пациента:', data);
+  const handleEdit = async (formData: any) => {
+    await updatePatient({
+      id: selectedPatient.id,
+      input: {
+        ...formData,
+        dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
+      },
+    }).unwrap();
 
-    try {
-      const patientData = {
-        name: data.name || '',
-        surname: data.surname || '',
-        patronymic: data.patronymic || '',
-        email: data.email || '',
-        gender: data.gender || 'MALE',
-        phoneNumber: data.phoneNumber || data.phone_number || '',
-        tg: data.tg || '',
-        dateOfBirth: data.dateOfBirth || data.date_of_birth || null,
-      };
-
-      console.log('Отправляемые данные:', patientData);
-
-      const result = await createPatient({
-        ...patientData,
-        dateOfBirth: dayjs(+patientData.dateOfBirth).format('YYYY-MM-DD'),
-      }).unwrap();
-
-      console.log('Результат создания пациента:', result);
-
-      if (result.data?.createPatient?.success) {
-        setIsModalOpen(false);
-        alert('Пациент успешно создан!');
-      } else {
-        alert(`Ошибка: ${result.data?.createPatient?.message || 'Неизвестная ошибка'}`);
-      }
-    } catch (err) {
-      console.error('Ошибка при создании пациента:', err);
-      alert('Произошла ошибка при создании пациента');
-    }
+    notifySuccess();
+    setIsEditModalOpen(false);
   };
 
   return (
-    <TemplatePage title="Пациенты" description="Управление базой данных пациентов" toggleModalState={toggleModalState}>
-      <PatientsList />
+    <TemplatePage
+      title="Пациенты"
+      description="Управление базой данных пациентов"
+      toggleModalState={() => setIsCreateModalOpen(true)}
+    >
+      {contextHolder}
+
+      <PaginationList
+        entities={dataSource}
+        columns={columns}
+        loading={isLoading}
+      />
+
+      {/* CREATE */}
       <EntityModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
         title="Создание пациента"
         fields={patientFields}
         buttonText="Создать"
-        onSubmit={handleOk}
-        isLoading={isLoading}
+        onSubmit={handleCreate}
+        isLoading={isCreating}
+        hasDefaultValue={false}
+      />
+
+      {/* EDIT */}
+      <EntityModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        title="Редактирование пациента"
+        fields={patientFields}
+        defaultValues={selectedPatient}
+        buttonText="Сохранить изменения"
+        onSubmit={handleEdit}
+        hasDefaultValue
       />
     </TemplatePage>
   );

@@ -227,7 +227,7 @@ const SchedulePage: React.FC = () => {
     const num = getMonthData(value);
     return num ? (
       <div className="notes-month">
-        <section className="font-bold text-blue-600">{num}</section>
+        <section className="text-2xl font-bold">{num} sadsd</section>
         <span className="text-xs text-gray-500">записей</span>
       </div>
     ) : null;
@@ -270,34 +270,34 @@ const SchedulePage: React.FC = () => {
   return (
     <TemplatePage title="Расписание" description="Просмотр и управление записями пациентов">
       {/* Статистика */}
-      <Card className="mb-6 shadow-sm">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+      <div className="mb-6 shadow-sm pr-2">
+        <div className="flex flex-wrap gap-4 items-start">
+          <div className="text-center p-3 rounded-lg">
+            <div className="text-2xl font-bold">{stats.total}</div>
             <div className="text-sm text-gray-600">Всего записей</div>
           </div>
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
+          <div className="text-center p-3 rounded-lg">
+            <div className="text-2xl font-bold">{stats.confirmed}</div>
             <div className="text-sm text-gray-600">Подтверждено</div>
           </div>
-          <div className="text-center p-3 bg-yellow-50 rounded-lg">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+          <div className="text-center p-3 rounded-lg">
+            <div className="text-2xl font-bold">{stats.pending}</div>
             <div className="text-sm text-gray-600">Ожидание</div>
           </div>
-          <div className="text-center p-3 bg-red-50 rounded-lg">
-            <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
+          <div className="text-center p-3  rounded-lg">
+            <div className="text-2xl font-bold">{stats.cancelled}</div>
             <div className="text-sm text-gray-600">Отменено</div>
           </div>
-          <div className="text-center p-3 bg-purple-50 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{stats.today}</div>
+          <div className="text-center p-3 rounded-lg">
+            <div className="text-2xl font-bold">{stats.today}</div>
             <div className="text-sm text-gray-600">Сегодня</div>
           </div>
-          <div className="text-center p-3 bg-cyan-50 rounded-lg">
-            <div className="text-2xl font-bold text-cyan-600">{stats.upcoming}</div>
+          <div className="text-center p-3 rounded-lg">
+            <div className="text-2xl font-bold">{stats.upcoming}</div>
             <div className="text-sm text-gray-600">Предстоящие</div>
           </div>
         </div>
-      </Card>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Календарь */}

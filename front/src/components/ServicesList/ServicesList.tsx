@@ -119,7 +119,7 @@ const ServicesList: React.FC = () => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
-      currency: 'RUB',
+      currency: 'KGS',
       minimumFractionDigits: 0,
     }).format(price);
   };
@@ -150,7 +150,7 @@ const ServicesList: React.FC = () => {
               {service.name}
             </Title>
             {service.price && (
-              <span className="text-xl font-bold text-blue-600 whitespace-nowrap">
+              <span className="text-xl font-bold text-blue-400 whitespace-nowrap">
                 {formatPrice(service.price)}
               </span>
             )}
@@ -210,10 +210,10 @@ const ServicesList: React.FC = () => {
         </div>
 
         <div className="flex gap-1 px-6 pb-6 pt-4 bg-gray-50 border-t border-gray-100">
-          <button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-md hover:shadow-lg">
+          <button className="w-full bg-gradient-to-r from-blue-300 to-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-md hover:shadow-lg">
             Редактировать
           </button>
-          <button className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-md hover:shadow-lg">
+          <button className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-md hover:shadow-lg">
             Удалить
           </button>
         </div>
