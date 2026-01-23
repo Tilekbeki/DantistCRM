@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Layout, theme } from 'antd';
 import SideBar from './components/SideBar';
-import { PatientsPage, AppintmentsPage, MedicalCardsPage, SchedulePage, PersonalPage, HomePage, ServicesPage, AuthPage } from './pages';
+import { PatientsPage, AppointmentsPage, MedicalCardsPage, SchedulePage, PersonalPage, HomePage, ServicesPage, AuthPage } from './pages';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useGetPatientsQuery } from './store/services/PatientApi';
 import { useGetPersonalsQuery } from './store/services/PersonalApi';
@@ -36,7 +36,7 @@ const App: React.FC = () => {
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/patients" element={<PatientsPage />} />
-                <Route path="/appointments" element={<AppintmentsPage />} />
+                <Route path="/appointments" element={<AppointmentsPage />} />
                 <Route path="/medicalcards" element={<MedicalCardsPage />} />
                 <Route path="/schedule" element={<SchedulePage />} />
                 <Route path="/personal" element={<PersonalPage />} />
