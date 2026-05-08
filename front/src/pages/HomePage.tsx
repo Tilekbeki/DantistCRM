@@ -1,17 +1,10 @@
 import { Card } from 'antd';
-import { Users, Calendar, UserCog, Activity } from 'lucide-react';
-import TemplatePage from './TemplatePage';
+import { Activity, Calendar, UserCog, Users } from 'lucide-react';
+
+import { useGetAppointmentsQuery } from '../store/services/AppointmentsApi';
 import { useGetPatientsQuery } from '../store/services/PatientApi';
 import { useGetPersonalsQuery } from '../store/services/PersonalApi';
-import { useGetServicesQuery } from '../store/services/ServiceApi';
-import { useGetAppointmentsQuery } from '../store/services/AppointmentsApi';
-import { useEffect } from 'react';
-import { addPatient } from '../store/slices/patientSlice';
-import { addPersonal } from '../store/slices/personalSlice';
-import { useDispatch } from 'react-redux';
-import { addCategory, addService } from '../store/slices/serviceSlice';
-import { addAppointments } from '../store/slices/appointmentSlice';
-
+import TemplatePage from './TemplatePage';
 
 const StatCard = ({
   title,
@@ -22,15 +15,13 @@ const StatCard = ({
   title: string;
   value: string | number;
   description: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ size?: number }>;
 }) => (
   <Card className="w-[224px] h-[168px]">
     <div className="flex flex-col gap-6">
       <div className="flex justify-between">
         <div className="text-sm font-medium">{title}</div>
-        <div>
-          <Icon size={16} />
-        </div>
+        <Icon size={16} />
       </div>
       <div>
         <div className="text-2xl font-bold">{value}</div>
@@ -43,62 +34,19 @@ const StatCard = ({
 const HomePage = () => {
   const { data: patientsData, isLoading, error } = useGetPatientsQuery();
   const { data: personalsData } = useGetPersonalsQuery();
-  const {data: servicesData} = useGetServicesQuery();
-  const { data: appointmentsData }  = useGetAppointmentsQuery()
-  const dispatch = useDispatch();
+  const { data: appointmentsData } = useGetAppointmentsQuery();
+
   const patients = patientsData?.data?.allPatients || [];
   const personals = personalsData?.data?.allPersonal || [];
-  const services = servicesData?.data?.allServices || [];
-  const categoriesList = servicesData?.data?.allCategories || {};
-
-  console.log(services);
-
-  useEffect(() => {
-    if (patients.length > 0) {
-      patients.forEach((patient) => {
-        dispatch(addPatient(patient));
-      });
-
-      if (personals.length > 0) {
-        personals.forEach((personal) => {
-          dispatch(addPersonal(personal));
-        });
-      }
-      if(services.length>0) {
-        services.forEach((service) => {
-          dispatch(addService(service));
-        });
-      }
-      if(categoriesList.length > 0){
-        categoriesList.forEach((category: any) => {
-          dispatch(addCategory(category));
-        });
-      }
-      if(appointmentsData) {
-        dispatch(addAppointments(appointmentsData.data.allAppointments));
-        console.log('appointments data',appointmentsData.data.allAppointments)
-      }
-    }
-  }, [personals, patients,services, categoriesList, dispatch, appointmentsData]);
-
-  const content = (
-    <div className="flex gap-4 flex-wrap">
-      <StatCard
-        title="Всего пациентов"
-        value={isLoading ? '...' : patients.length}
-        description={isLoading ? 'Загрузка...' : `+0 за последний месяц`}
-        icon={Users}
-      />
-      <StatCard title="Приемов сегодня" value={0} description="0 завершено, 0 запланировано" icon={Calendar} />
-      <StatCard title="Врачей" value={isLoading ? '...' : personals.length} description="Все активны" icon={UserCog} />
-      <StatCard title="Операций за месяц" value={0} description="+0% к прошлому месяцу" icon={Activity} />
-    </div>
+  const appointments = appointmentsData?.data?.allAppointments || [];
+  const todayAppointments = appointments.filter((appointment) =>
+    appointment.visitDate?.startsWith(new Date().toISOString().slice(0, 10)),
   );
 
   if (error) {
     return (
-      <TemplatePage title="Дэшборд" description="Ошибка загрузки данных">
-        <div className="text-red-500">Ошибка: Не удалось загрузить данные пациентов</div>
+      <TemplatePage title="Дашборд" description="Ошибка загрузки данных">
+        <div className="text-red-500">Не удалось загрузить данные дашборда</div>
       </TemplatePage>
     );
   }
@@ -106,9 +54,34 @@ const HomePage = () => {
   return (
     <TemplatePage
       title="Панель управления"
-      description="Добро пожаловать в административную панель стоматологической клиники"
+      description="Краткая операционная сводка стоматологической клиники"
     >
-      {content}
+      <div className="flex gap-4 flex-wrap">
+        <StatCard
+          title="Всего пациентов"
+          value={isLoading ? '...' : patients.length}
+          description="Пациенты в базе CRM"
+          icon={Users}
+        />
+        <StatCard
+          title="Приемов сегодня"
+          value={todayAppointments.length}
+          description="Запланированные и завершенные приемы"
+          icon={Calendar}
+        />
+        <StatCard
+          title="Сотрудников"
+          value={personals.length}
+          description="Врачи и персонал клиники"
+          icon={UserCog}
+        />
+        <StatCard
+          title="Всего приемов"
+          value={appointments.length}
+          description="История и будущие записи"
+          icon={Activity}
+        />
+      </div>
     </TemplatePage>
   );
 };

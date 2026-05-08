@@ -10,6 +10,7 @@ from .allergies import Allergies, PatientAllergies
 from .teeth import Teeth, TeethHistory
 from .services import Categories, Service
 from .media import PatientMedia
+from .treatment import TreatmentPlan
 
 __all__ = [
     'Base',
@@ -23,5 +24,6 @@ __all__ = [
     'TeethHistory',
     'Categories',
     'Service',
-    'PatientMedia'
+    'PatientMedia',
+    'TreatmentPlan'
 ]

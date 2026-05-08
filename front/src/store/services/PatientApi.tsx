@@ -14,6 +14,91 @@ interface Patient {
   createdAt: string;
 }
 
+interface PersonSummary {
+  id: number;
+  name: string;
+  surname: string;
+  patronymic?: string;
+  role: string;
+}
+
+interface ServiceSummary {
+  id: number;
+  name: string;
+  description?: string;
+  duration: number;
+  price: number;
+}
+
+interface PatientMediaSummary {
+  id: number;
+  patientId: number;
+  appointmentId?: number;
+  type: string;
+  fileUrl: string;
+  uploadedAt: string;
+}
+
+interface PatientAppointmentSummary {
+  id: number;
+  visitDate: string;
+  createdAt: string;
+  status: string;
+  doctor?: PersonSummary;
+  service?: ServiceSummary;
+  media: PatientMediaSummary[];
+}
+
+interface PatientRecordSummary {
+  id: number;
+  diagnose?: string;
+  notes?: string;
+  createdAt: string;
+  doctor?: PersonSummary;
+  service?: ServiceSummary;
+}
+
+interface PatientToothHistorySummary {
+  id: number;
+  diagnosis?: string;
+  notes?: string;
+  createdAt: string;
+  doctor?: PersonSummary;
+  service?: ServiceSummary;
+}
+
+interface PatientToothSummary {
+  id: number;
+  toothNumber: number;
+  status: string;
+  history: PatientToothHistorySummary[];
+}
+
+interface PatientTreatmentPlanSummary {
+  id: number;
+  title: string;
+  diagnosis?: string;
+  notes?: string;
+  status: string;
+  toothNumbers: number[];
+  plannedAt?: string;
+  createdAt: string;
+  doctor?: PersonSummary;
+  service?: ServiceSummary;
+  appointment?: PatientAppointmentSummary;
+  media: PatientMediaSummary[];
+  teeth: PatientToothSummary[];
+}
+
+export interface PatientCard {
+  patient: Patient;
+  appointments: PatientAppointmentSummary[];
+  records: PatientRecordSummary[];
+  media: PatientMediaSummary[];
+  teeth: PatientToothSummary[];
+  treatmentPlans: PatientTreatmentPlanSummary[];
+}
+
 interface PatientInput {
   name?: string;
   surname?: string;
@@ -24,6 +109,19 @@ interface PatientInput {
   gender?: string;
   phoneNumber?: string;
   tg?: string;
+}
+
+interface TreatmentPlanInput {
+  patientId: number;
+  doctorId: number;
+  title: string;
+  serviceId?: number;
+  appointmentId?: number;
+  diagnosis?: string;
+  notes?: string;
+  status?: string;
+  toothNumbers?: number[];
+  plannedAt?: string;
 }
 
 interface QueryResult {
@@ -95,7 +193,103 @@ export const patientApi = createApi({
           variables: { id },
         },
       }),
-      providesTags: (result, error, id) => [{ type: 'Patient', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Patient', id }],
+    }),
+
+    getPatientCard: build.query<{ data: { patientCard: PatientCard } }, number>({
+      query: (id) => ({
+        url: '',
+        method: 'POST',
+        body: {
+          query: `
+            query GetPatientCard($id: Int!) {
+              patientCard(id: $id) {
+                patient {
+                  id
+                  name
+                  surname
+                  patronymic
+                  email
+                  avatarLink
+                  dateOfBirth
+                  gender
+                  phoneNumber
+                  tg
+                  createdAt
+                }
+                appointments {
+                  id
+                  visitDate
+                  createdAt
+                  status
+                  doctor { id name surname patronymic role }
+                  service { id name description duration price }
+                  media { id patientId appointmentId type fileUrl uploadedAt }
+                }
+                records {
+                  id
+                  diagnose
+                  notes
+                  createdAt
+                  doctor { id name surname patronymic role }
+                  service { id name description duration price }
+                }
+                media { id patientId appointmentId type fileUrl uploadedAt }
+                teeth {
+                  id
+                  toothNumber
+                  status
+                  history {
+                    id
+                    diagnosis
+                    notes
+                    createdAt
+                    doctor { id name surname patronymic role }
+                    service { id name description duration price }
+                  }
+                }
+                treatmentPlans {
+                  id
+                  title
+                  diagnosis
+                  notes
+                  status
+                  toothNumbers
+                  plannedAt
+                  createdAt
+                  doctor { id name surname patronymic role }
+                  service { id name description duration price }
+                  appointment {
+                    id
+                    visitDate
+                    createdAt
+                    status
+                    doctor { id name surname patronymic role }
+                    service { id name description duration price }
+                    media { id patientId appointmentId type fileUrl uploadedAt }
+                  }
+                  media { id patientId appointmentId type fileUrl uploadedAt }
+                  teeth {
+                    id
+                    toothNumber
+                    status
+                    history {
+                      id
+                      diagnosis
+                      notes
+                      createdAt
+                      doctor { id name surname patronymic role }
+                      service { id name description duration price }
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          variables: { id },
+        },
+      }),
+      providesTags: (_result, _error, id) => [{ type: 'Patient', id }],
     }),
 
     createPatient: build.mutation<{ data: { createPatient: QueryResult } }, PatientInput>({
@@ -160,7 +354,7 @@ export const patientApi = createApi({
           },
         },
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Patient', id }, 'Patient'],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Patient', id }, 'Patient'],
     }),
 
     deletePatient: build.mutation<{ data: { deletePatient: QueryResult } }, number>({
@@ -182,13 +376,35 @@ export const patientApi = createApi({
       }),
       invalidatesTags: ['Patient'],
     }),
+
+    createTreatmentPlan: build.mutation<{ data: { createTreatmentPlan: QueryResult } }, TreatmentPlanInput>({
+      query: (input) => ({
+        url: '',
+        method: 'POST',
+        body: {
+          query: `
+            mutation CreateTreatmentPlan($input: TreatmentPlanInput!) {
+              createTreatmentPlan(input: $input) {
+                success
+                message
+                data
+              }
+            }
+          `,
+          variables: { input },
+        },
+      }),
+      invalidatesTags: (_result, _error, input) => [{ type: 'Patient', id: input.patientId }, 'Patient'],
+    }),
   }),
 });
 
 export const {
   useGetPatientsQuery,
   useGetPatientQuery,
+  useGetPatientCardQuery,
   useCreatePatientMutation,
   useUpdatePatientMutation,
   useDeletePatientMutation,
+  useCreateTreatmentPlanMutation,
 } = patientApi;

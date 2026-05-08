@@ -10,7 +10,13 @@ from models.teeth import Teeth
 from models.allergies import PatientAllergies
 from models.medical_records import PatientRecords
 from models.media import PatientMedia
+from models.appointment import Appointment
+from models.personal import Personal
+from models.services import Service
+from models.treatment import TreatmentPlan
+from models.teeth import TeethHistory
 from .base import QueryResult
+from .treatment_schema import parse_tooth_numbers
 
 @strawberry.enum
 class Gender(Enum):
@@ -62,6 +68,149 @@ class PatientType:
         except:
             return None
 
+
+@strawberry.type
+class PatientDoctorSummaryType:
+    id: int
+    name: str
+    surname: str
+    patronymic: Optional[str]
+    role: str
+
+
+@strawberry.type
+class PatientServiceSummaryType:
+    id: int
+    name: str
+    description: Optional[str]
+    duration: int
+    price: float
+
+
+@strawberry.type
+class PatientMediaSummaryType:
+    id: int
+    patient_id: int
+    appointment_id: Optional[int]
+    type: str
+    file_url: str
+    uploaded_at: str
+
+
+@strawberry.type
+class PatientAppointmentSummaryType:
+    id: int
+    visit_date: str
+    created_at: str
+    status: str
+    doctor: Optional[PatientDoctorSummaryType]
+    service: Optional[PatientServiceSummaryType]
+    media: List[PatientMediaSummaryType]
+
+
+@strawberry.type
+class PatientRecordSummaryType:
+    id: int
+    diagnose: Optional[str]
+    notes: Optional[str]
+    created_at: str
+    doctor: Optional[PatientDoctorSummaryType]
+    service: Optional[PatientServiceSummaryType]
+
+
+@strawberry.type
+class PatientToothHistorySummaryType:
+    id: int
+    diagnosis: Optional[str]
+    notes: Optional[str]
+    created_at: str
+    doctor: Optional[PatientDoctorSummaryType]
+    service: Optional[PatientServiceSummaryType]
+
+
+@strawberry.type
+class PatientToothSummaryType:
+    id: int
+    tooth_number: int
+    status: str
+    history: List[PatientToothHistorySummaryType]
+
+
+@strawberry.type
+class PatientTreatmentPlanSummaryType:
+    id: int
+    title: str
+    diagnosis: Optional[str]
+    notes: Optional[str]
+    status: str
+    tooth_numbers: List[int]
+    planned_at: Optional[str]
+    created_at: str
+    doctor: Optional[PatientDoctorSummaryType]
+    service: Optional[PatientServiceSummaryType]
+    appointment: Optional[PatientAppointmentSummaryType]
+    media: List[PatientMediaSummaryType]
+    teeth: List[PatientToothSummaryType]
+
+
+@strawberry.type
+class PatientCardType:
+    patient: PatientType
+    appointments: List[PatientAppointmentSummaryType]
+    records: List[PatientRecordSummaryType]
+    media: List[PatientMediaSummaryType]
+    teeth: List[PatientToothSummaryType]
+    treatment_plans: List[PatientTreatmentPlanSummaryType]
+
+
+def doctor_summary(doctor: Optional[Personal]) -> Optional[PatientDoctorSummaryType]:
+    if not doctor:
+        return None
+
+    return PatientDoctorSummaryType(
+        id=doctor.id,
+        name=doctor.name,
+        surname=doctor.surname,
+        patronymic=doctor.patronymic,
+        role=doctor.role,
+    )
+
+
+def service_summary(service: Optional[Service]) -> Optional[PatientServiceSummaryType]:
+    if not service:
+        return None
+
+    return PatientServiceSummaryType(
+        id=service.id,
+        name=service.name,
+        description=service.description,
+        duration=service.duration,
+        price=service.price,
+    )
+
+
+def media_summary(media: PatientMedia) -> PatientMediaSummaryType:
+    return PatientMediaSummaryType(
+        id=media.id,
+        patient_id=media.patient_id,
+        appointment_id=media.appointment_id,
+        type=media.type,
+        file_url=media.file_url,
+        uploaded_at=media.uploaded_at.isoformat(),
+    )
+
+
+def appointment_summary(appointment: Appointment) -> PatientAppointmentSummaryType:
+    return PatientAppointmentSummaryType(
+        id=appointment.id,
+        visit_date=appointment.visit_date.isoformat(),
+        created_at=appointment.created_at.isoformat(),
+        status=appointment.status,
+        doctor=doctor_summary(appointment.doctor),
+        service=service_summary(appointment.service),
+        media=[media_summary(item) for item in appointment.media],
+    )
+
 @strawberry.type
 class PatientQuery:
     @strawberry.field
@@ -107,6 +256,135 @@ class PatientQuery:
                     createdAt=p.created_at.isoformat()
                 ) for p in patients
             ]
+        finally:
+            db.close()
+
+    @strawberry.field
+    def patient_card(self, id: int) -> Optional[PatientCardType]:
+        db = SessionLocal()
+        try:
+            patient = db.query(Patient).filter(Patient.id == id).first()
+            if not patient:
+                return None
+
+            patient_type = PatientType(
+                id=patient.id,
+                avatar_link=patient.avatar_link,
+                name=patient.name,
+                surname=patient.surname,
+                patronymic=patient.patronymic,
+                date_of_birth=patient.date_of_birth.isoformat() if patient.date_of_birth else None,
+                email=patient.email,
+                phone_number=patient.phone_number,
+                tg=patient.tg,
+                gender=patient.gender.value if patient.gender else Gender.MALE.value,
+                createdAt=patient.created_at.isoformat()
+            )
+
+            appointments = [
+                appointment_summary(item)
+                for item in db.query(Appointment)
+                .filter(Appointment.patient_id == id)
+                .order_by(Appointment.visit_date.desc())
+                .all()
+            ]
+
+            records = [
+                PatientRecordSummaryType(
+                    id=item.id,
+                    diagnose=item.diagnose,
+                    notes=item.notes,
+                    created_at=item.created_at.isoformat(),
+                    doctor=doctor_summary(item.doctor),
+                    service=service_summary(item.service),
+                )
+                for item in db.query(PatientRecords)
+                .filter(PatientRecords.patient_id == id)
+                .order_by(PatientRecords.created_at.desc())
+                .all()
+            ]
+
+            media = [
+                media_summary(item)
+                for item in db.query(PatientMedia)
+                .filter(PatientMedia.patient_id == id)
+                .order_by(PatientMedia.uploaded_at.desc())
+                .all()
+            ]
+
+            teeth = [
+                PatientToothSummaryType(
+                    id=tooth.id,
+                    tooth_number=tooth.tooth_number,
+                    status=tooth.status,
+                    history=[
+                        PatientToothHistorySummaryType(
+                            id=history.id,
+                            diagnosis=history.diagnosis,
+                            notes=history.notes,
+                            created_at=history.created_at.isoformat(),
+                            doctor=doctor_summary(history.doctor),
+                            service=service_summary(history.service),
+                        )
+                        for history in db.query(TeethHistory)
+                        .filter(TeethHistory.tooth_id == tooth.id)
+                        .order_by(TeethHistory.created_at.desc())
+                        .all()
+                    ],
+                )
+                for tooth in db.query(Teeth)
+                .filter(Teeth.patient_id == id)
+                .order_by(Teeth.tooth_number.asc())
+                .all()
+            ]
+
+            teeth_by_number = {tooth.tooth_number: tooth for tooth in teeth}
+            appointment_by_id = {item.id: item for item in appointments}
+
+            treatment_plans = []
+            for plan in (
+                db.query(TreatmentPlan)
+                .filter(TreatmentPlan.patient_id == id)
+                .order_by(TreatmentPlan.created_at.desc())
+                .all()
+            ):
+                tooth_numbers = parse_tooth_numbers(plan.tooth_numbers)
+                plan_media = [
+                    item
+                    for item in media
+                    if plan.appointment_id and item.appointment_id == plan.appointment_id
+                ]
+
+                treatment_plans.append(
+                    PatientTreatmentPlanSummaryType(
+                        id=plan.id,
+                        title=plan.title,
+                        diagnosis=plan.diagnosis,
+                        notes=plan.notes,
+                        status=plan.status,
+                        tooth_numbers=tooth_numbers,
+                        planned_at=plan.planned_at.isoformat() if plan.planned_at else None,
+                        created_at=plan.created_at.isoformat(),
+                        doctor=doctor_summary(plan.doctor),
+                        service=service_summary(plan.service),
+                        appointment=appointment_by_id.get(plan.appointment_id),
+                        media=plan_media,
+                        teeth=[
+                            teeth_by_number[number]
+                            for number in tooth_numbers
+                            if number in teeth_by_number
+                        ],
+                    )
+                )
+
+            return PatientCardType(
+                patient=patient_type,
+                appointments=appointments,
+                records=records,
+                media=media,
+                teeth=teeth,
+                treatment_plans=treatment_plans,
+            )
         finally:
             db.close()
     

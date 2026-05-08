@@ -1,23 +1,33 @@
 # schema/__init__.py
-"""
-GraphQL схемы для медицинской CRM
-"""
-from .personal_schema import PersonalQuery, PersonalMutation
-from .patient_schema import PatientQuery, PatientMutation
-from .appointment_schema import AppointmentQuery, AppointmentMutation
-from .allergies_schema import AllergiesQuery, AllergiesMutation
-from .teeth_schema import TeethQuery, TeethMutation
-from .services_schema import ServicesQuery, ServicesMutation
-from .media_schema import MediaQuery, MediaMutation
-from .auth_schema import AuthQuery, AuthMutation  # Добавляем импорт
+"""GraphQL schemas for Dantist CRM."""
+
+from .allergies_schema import AllergiesMutation, AllergiesQuery
+from .appointment_schema import AppointmentMutation, AppointmentQuery
+from .auth_schema import AuthMutation, AuthQuery
+from .media_schema import MediaMutation, MediaQuery
+from .patient_schema import PatientMutation, PatientQuery
+from .personal_schema import PersonalMutation, PersonalQuery
+from .services_schema import ServicesMutation, ServicesQuery
+from .teeth_schema import TeethMutation, TeethQuery
+from .treatment_schema import TreatmentMutation, TreatmentQuery
 
 __all__ = [
-    'PersonalQuery', 'PersonalMutation',
-    'PatientQuery', 'PatientMutation', 
-    'AppointmentQuery', 'AppointmentMutation',
-    'AllergiesQuery', 'AllergiesMutation',
-    'TeethQuery', 'TeethMutation',
-    'ServicesQuery', 'ServicesMutation', 
-    'MediaQuery', 'MediaMutation',
-    'AuthQuery', 'AuthMutation'  # Добавляем в экспорт
+    "PersonalQuery",
+    "PersonalMutation",
+    "PatientQuery",
+    "PatientMutation",
+    "AppointmentQuery",
+    "AppointmentMutation",
+    "AllergiesQuery",
+    "AllergiesMutation",
+    "TeethQuery",
+    "TeethMutation",
+    "ServicesQuery",
+    "ServicesMutation",
+    "MediaQuery",
+    "MediaMutation",
+    "TreatmentQuery",
+    "TreatmentMutation",
+    "AuthQuery",
+    "AuthMutation",
 ]

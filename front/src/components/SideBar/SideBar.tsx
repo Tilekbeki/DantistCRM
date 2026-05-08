@@ -22,11 +22,11 @@ const SideBar: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
 
   const selectedKey = (() => {
     if (location.pathname === '/') return '1';
-    if (location.pathname === '/patients') return '2';
+    if (location.pathname.startsWith('/patients')) return '2';
     if (location.pathname === '/personal') return '3';
     if (location.pathname === '/schedule') return '4';
     if (location.pathname === '/appointments') return '5';
-    if (location.pathname === '/medicalcards') return '6';
+    if (location.pathname.startsWith('/medicalcards')) return '6';
     if (location.pathname === '/services') return '7'; // Добавили для services
     return '';
   })();

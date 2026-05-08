@@ -1,19 +1,19 @@
-import TemplatePage from './TemplatePage';
-import PaginationList from '../components/PaginationList';
+import { Button, Space, Typography, notification } from 'antd';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+
 import EntityModal from '../components/EntityModal/EntityModal';
 import { patientFields } from '../components/Fields/patientFields';
-
+import PaginationList from '../components/PaginationList';
 import {
-  useGetPatientsQuery,
-  useDeletePatientMutation,
-  useUpdatePatientMutation,
   useCreatePatientMutation,
+  useDeletePatientMutation,
+  useGetPatientsQuery,
+  useUpdatePatientMutation,
 } from '../store/services/PatientApi';
-
-import { Typography, notification } from 'antd';
-import { useSelector } from 'react-redux';
-import { useState } from 'react';
-import dayjs from 'dayjs';
+import TemplatePage from './TemplatePage';
 
 const { Text } = Typography;
 
@@ -21,17 +21,16 @@ const PatientsPage = () => {
   const role = useSelector((state: any) => state.auth.role);
 
   const { data, isLoading } = useGetPatientsQuery();
-  const [createPatient, { isLoading: isCreating }] = useCreatePatientMutation();
+  const [createPatient] = useCreatePatientMutation();
   const [updatePatient] = useUpdatePatientMutation();
   const [deletePatient] = useDeletePatientMutation();
-
-  const patients = data?.data?.allPatients || [];
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
-
   const [api, contextHolder] = notification.useNotification();
+
+  const patients = data?.data?.allPatients || [];
 
   const notifySuccess = () =>
     api.success({
@@ -39,71 +38,85 @@ const PatientsPage = () => {
       description: 'Операция выполнена успешно',
     });
 
-  // ---------- columns ----------
   const columns = [
     {
-      title: 'Имя',
-      render: (_: any, record: any) => (
-        <a href={`/patients/${record.id}`}>
-          {record.name} {record.surname}
-        </a>
+      title: 'Пациент',
+      render: (_: unknown, record: any) => (
+        <Space direction="vertical" size={0}>
+          <Link to={`/patients/${record.id}`}>
+            {record.surname} {record.name} {record.patronymic}
+          </Link>
+          <Text type="secondary">Карточка пациента</Text>
+        </Space>
       ),
     },
     {
       title: 'Дата рождения',
       dataIndex: 'dateOfBirth',
-      render: (date: any) =>
-        date ? dayjs(date).format('DD.MM.YYYY') : <Text type="secondary">—</Text>,
+      render: (date: string) => (date ? dayjs(date).format('DD.MM.YYYY') : <Text type="secondary">-</Text>),
     },
     {
       title: 'Пол',
       dataIndex: 'gender',
-      render: (v: string) => (v === 'male' ? 'Мужской' : 'Женский'),
+      render: (value: string) => (value === 'male' ? 'Мужской' : 'Женский'),
     },
     {
       title: 'Телефон',
       dataIndex: 'phoneNumber',
-      render: (v: string) => v || <Text type="secondary">—</Text>,
+      render: (value: string) => value || <Text type="secondary">-</Text>,
+    },
+    {
+      title: 'Карточка',
+      render: (_: unknown, record: any) => (
+        <Link to={`/patients/${record.id}`}>
+          <Button type="primary">Открыть</Button>
+        </Link>
+      ),
     },
     {
       title: 'Редактировать',
-      render: (_: any, record: any) => (
-        <a
+      render: (_: unknown, record: any) => (
+        <Button
           onClick={() => {
             setSelectedPatient({
               ...record,
-              dateOfBirth: dayjs(record.dateOfBirth),
+              dateOfBirth: record.dateOfBirth ? dayjs(record.dateOfBirth) : undefined,
             });
             setIsEditModalOpen(true);
           }}
         >
           Редактировать
-        </a>
+        </Button>
       ),
     },
     ...(role === 'admin'
       ? [
           {
             title: 'Удалить',
-            render: (_: any, record: any) => (
-              <a onClick={() => deletePatient(record.id)}>Удалить</a>
+            render: (_: unknown, record: any) => (
+              <Button danger onClick={() => deletePatient(record.id)}>
+                Удалить
+              </Button>
             ),
           },
         ]
       : []),
   ];
 
-  // ---------- data ----------
-  const dataSource = patients.map((p: any) => ({
-    key: p.id,
-    ...p,
+  const dataSource = patients.map((patient) => ({
+    key: patient.id,
+    ...patient,
   }));
 
-  // ---------- handlers ----------
+  const normalizeBirthDate = (value: unknown) => {
+    if (!value) return undefined;
+    return dayjs(value as any).format('YYYY-MM-DD');
+  };
+
   const handleCreate = async (formData: any) => {
     await createPatient({
       ...formData,
-      dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
+      dateOfBirth: normalizeBirthDate(formData.dateOfBirth),
     }).unwrap();
 
     notifySuccess();
@@ -115,7 +128,7 @@ const PatientsPage = () => {
       id: selectedPatient.id,
       input: {
         ...formData,
-        dateOfBirth: dayjs(+formData.dateOfBirth).format('YYYY-MM-DD'),
+        dateOfBirth: normalizeBirthDate(formData.dateOfBirth),
       },
     }).unwrap();
 
@@ -126,18 +139,13 @@ const PatientsPage = () => {
   return (
     <TemplatePage
       title="Пациенты"
-      description="Управление базой данных пациентов"
+      description="База пациентов и быстрый переход в медицинскую карту"
       toggleModalState={() => setIsCreateModalOpen(true)}
     >
       {contextHolder}
 
-      <PaginationList
-        entities={dataSource}
-        columns={columns}
-        loading={isLoading}
-      />
+      <PaginationList entities={dataSource} columns={columns} loading={isLoading} />
 
-      {/* CREATE */}
       <EntityModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
@@ -145,11 +153,9 @@ const PatientsPage = () => {
         fields={patientFields}
         buttonText="Создать"
         onSubmit={handleCreate}
-        isLoading={isCreating}
         hasDefaultValue={false}
       />
 
-      {/* EDIT */}
       <EntityModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}

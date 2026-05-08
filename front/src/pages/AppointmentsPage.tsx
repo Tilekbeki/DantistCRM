@@ -1,53 +1,189 @@
-import { useSelector } from 'react-redux';
-import { Typography, notification } from 'antd';
+import { Button, Space, Tag, Typography, notification } from 'antd';
 import type { TableColumnsType } from 'antd';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
-import TemplatePage from './TemplatePage';
-import PaginationList from '../components/PaginationList';
 import EntityModal from '../components/EntityModal/EntityModal';
 import { appointmentFields } from '../components/Fields/appointmentFields';
-
+import PaginationList from '../components/PaginationList';
 import {
-  useGetAppointmentsQuery,
   useCreateAppointmentMutation,
-  useUpdateAppointmentMutation,
   useDeleteAppointmentMutation,
+  useGetAppointmentsQuery,
+  useUpdateAppointmentMutation,
 } from '../store/services/AppointmentsApi';
+import { useGetPatientsQuery } from '../store/services/PatientApi';
+import { useGetPersonalsQuery } from '../store/services/PersonalApi';
+import { useGetServicesQuery } from '../store/services/ServiceApi';
+import TemplatePage from './TemplatePage';
 
 const { Text } = Typography;
 
-interface IAppointment {
+type AppointmentStatus = 'planned' | 'done' | 'cancelled';
+
+interface AppointmentRow {
+  key: number;
   id: number;
   patientId: number;
   doctorId: number;
-  serviceId: number;
+  serviceId?: number;
   visitDate: string;
   createdAt: string;
-  status: string;
+  status: AppointmentStatus;
+  patient?: {
+    id: number;
+    name: string;
+    surname: string;
+    patronymic?: string;
+    phoneNumber?: string;
+  };
+  doctor?: {
+    id: number;
+    name: string;
+    surname: string;
+    patronymic?: string;
+    role?: string;
+  };
+  service?: {
+    id: number;
+    name: string;
+    duration: number;
+    price: number;
+  };
 }
+
+const statusView: Record<string, { label: string; color: string }> = {
+  planned: { label: 'Запланирован', color: 'blue' },
+  done: { label: 'Завершен', color: 'green' },
+  cancelled: { label: 'Отменен', color: 'red' },
+  canceled: { label: 'Отменен', color: 'red' },
+};
+
+const fullName = (person?: { name?: string; surname?: string; patronymic?: string }) =>
+  [person?.surname, person?.name, person?.patronymic].filter(Boolean).join(' ') || 'Не указан';
+
+const normalizeDateTime = (value: unknown) => dayjs(value as any).toISOString();
 
 const AppointmentsPage = () => {
   const role = useSelector((state: any) => state.auth.role);
-
-  const patients = useSelector((state: any) => state.patients.patientsList);
-  const personals = useSelector((state: any) => state.personals.personalsList);
-  const services = useSelector((state: any) => state.services.servicesList);
+  const [api, contextHolder] = notification.useNotification();
 
   const { data, isLoading } = useGetAppointmentsQuery();
-  const [createAppointment, { isLoading: isCreating }] =
-    useCreateAppointmentMutation();
+  const { data: patientsData } = useGetPatientsQuery();
+  const { data: personalsData } = useGetPersonalsQuery();
+  const { data: servicesData } = useGetServicesQuery();
+
+  const [createAppointment] = useCreateAppointmentMutation();
   const [updateAppointment] = useUpdateAppointmentMutation();
   const [deleteAppointment] = useDeleteAppointmentMutation();
 
-  const appointments = data?.data?.allAppointments || [];
-
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentRow | null>(null);
 
-  const [api, contextHolder] = notification.useNotification();
+  const appointments = data?.data?.allAppointments || [];
+
+  const fieldsWithOptions = useMemo(
+    () =>
+      appointmentFields.map((field) => {
+        if (field.name === 'patientId') {
+          return {
+            ...field,
+            options: (patientsData?.data?.allPatients || []).map((patient) => ({
+              label: fullName(patient),
+              value: patient.id,
+            })),
+          };
+        }
+
+        if (field.name === 'doctorId') {
+          return {
+            ...field,
+            options: (personalsData?.data?.allPersonal || []).map((doctor) => ({
+              label: fullName(doctor),
+              value: doctor.id,
+            })),
+          };
+        }
+
+        if (field.name === 'serviceId') {
+          return {
+            ...field,
+            options: (servicesData?.data?.allServices || []).map((service) => ({
+              label: service.name,
+              value: service.id,
+            })),
+          };
+        }
+
+        return field;
+      }),
+    [patientsData, personalsData, servicesData],
+  );
+
+  const columns: TableColumnsType<AppointmentRow> = [
+    {
+      title: 'Пациент',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Link to={`/patients/${record.patientId}`}>{fullName(record.patient)}</Link>
+          <Text type="secondary">{record.patient?.phoneNumber || 'Телефон не указан'}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Врач',
+      render: (_, record) => fullName(record.doctor),
+    },
+    {
+      title: 'Дата приема',
+      dataIndex: 'visitDate',
+      render: (value: string) =>
+        value ? dayjs(value).format('DD.MM.YYYY HH:mm') : <Text type="secondary">-</Text>,
+    },
+    {
+      title: 'Услуга',
+      render: (_, record) => record.service?.name || <Text type="secondary">Не выбрана</Text>,
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      render: (value: string) => {
+        const status = statusView[value] || { label: value || '-', color: 'default' };
+        return <Tag color={status.color}>{status.label}</Tag>;
+      },
+    },
+    {
+      title: 'Действия',
+      render: (_, record) => (
+        <Space>
+          <Button
+            onClick={() => {
+              setSelectedAppointment({
+                ...record,
+                visitDate: record.visitDate ? (dayjs(record.visitDate) as any) : record.visitDate,
+              });
+              setIsEditModalOpen(true);
+            }}
+          >
+            Редактировать
+          </Button>
+          {role === 'admin' ? (
+            <Button danger onClick={() => deleteAppointment(record.id)}>
+              Удалить
+            </Button>
+          ) : null}
+        </Space>
+      ),
+    },
+  ];
+
+  const dataSource: AppointmentRow[] = appointments.map((appointment) => ({
+    key: appointment.id,
+    ...appointment,
+  }));
 
   const notifySuccess = () =>
     api.success({
@@ -55,129 +191,10 @@ const AppointmentsPage = () => {
       description: 'Операция выполнена успешно',
     });
 
-  // ---------- fields with options ----------
-  const fieldsWithOptions = appointmentFields.map((field) => {
-    if (field.name === 'patientId') {
-      return {
-        ...field,
-        options: Object.values(patients).map((p: any) => ({
-          label: `${p.name} ${p.surname}`,
-          value: p.id,
-        })),
-      };
-    }
-
-    if (field.name === 'doctorId') {
-      return {
-        ...field,
-        options: Object.values(personals).map((d: any) => ({
-          label: `${d.name} ${d.surname}`,
-          value: d.id,
-        })),
-      };
-    }
-
-    if (field.name === 'serviceId') {
-      return {
-        ...field,
-        options: Object.values(services).map((s: any) => ({
-          label: s.name,
-          value: s.id,
-        })),
-      };
-    }
-
-    return field;
-  });
-
-  // ---------- columns ----------
-  const columns: TableColumnsType<IAppointment> = [
-    {
-      title: 'Пациент',
-      render: (_: any, record) => {
-        const patient = patients[record.patientId];
-        return patient ? (
-          <a href={`/patients/${record.patientId}`}>
-            {patient.name} {patient.surname}
-          </a>
-        ) : (
-          <Text type="secondary">—</Text>
-        );
-      },
-    },
-    {
-      title: 'Врач',
-      render: (_: any, record) => {
-        const doctor = personals[record.doctorId];
-        return doctor ? (
-          <a href={`/doctors/${record.doctorId}`}>
-            {doctor.name} {doctor.surname}
-          </a>
-        ) : (
-          <Text type="secondary">—</Text>
-        );
-      },
-    },
-    {
-      title: 'Дата приёма',
-      dataIndex: 'visitDate',
-      render: (v: string) =>
-        v ? dayjs(v).format('DD.MM.YYYY HH:mm') : <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Услуга',
-      render: (_: any, record) =>
-        services[record.serviceId]?.name || <Text type="secondary">—</Text>,
-    },
-    {
-      title: 'Статус',
-      dataIndex: 'status',
-      render: (v: string) => {
-        if (v === 'planned') return 'Запланирован';
-        if (v === 'done') return 'Завершён';
-        if (v === 'cancelled') return 'Отменён';
-        return '—';
-      },
-    },
-    {
-      title: 'Редактировать',
-      render: (_: any, record: any) => (
-        <a
-          onClick={() => {
-            setSelectedAppointment({
-              ...record,
-              visitDate: dayjs(record.visitDate),
-            });
-            setIsEditModalOpen(true);
-          }}
-        >
-          Редактировать
-        </a>
-      ),
-    },
-    ...(role === 'admin'
-      ? [
-          {
-            title: 'Удалить',
-            render: (_: any, record: any) => (
-              <a onClick={() => deleteAppointment(record.id)}>Удалить</a>
-            ),
-          },
-        ]
-      : []),
-  ];
-
-  // ---------- data ----------
-  const dataSource = appointments.map((a: IAppointment) => ({
-    key: a.id,
-    ...a,
-  }));
-
-  // ---------- handlers ----------
   const handleCreate = async (formData: any) => {
     await createAppointment({
       ...formData,
-      visitDate: dayjs(+formData.visitDate).toISOString(),
+      visitDate: normalizeDateTime(formData.visitDate),
     }).unwrap();
 
     notifySuccess();
@@ -185,11 +202,13 @@ const AppointmentsPage = () => {
   };
 
   const handleEdit = async (formData: any) => {
+    if (!selectedAppointment) return;
+
     await updateAppointment({
       id: selectedAppointment.id,
       input: {
         ...formData,
-        visitDate: dayjs(+formData.visitDate).toISOString(),
+        visitDate: normalizeDateTime(formData.visitDate),
       },
     }).unwrap();
 
@@ -199,38 +218,30 @@ const AppointmentsPage = () => {
 
   return (
     <TemplatePage
-      title="Приёмы"
-      description="Управление записями приёмов"
+      title="Приемы"
+      description="Записи пациентов с готовыми данными пациента, врача и услуги из backend"
       toggleModalState={() => setIsCreateModalOpen(true)}
     >
       {contextHolder}
 
-      <PaginationList
-        entities={dataSource}
-        columns={columns}
-        loading={isLoading}
-        pageSize={8}
-      />
+      <PaginationList entities={dataSource} columns={columns} loading={isLoading} pageSize={8} />
 
-      {/* CREATE */}
       <EntityModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
-        title="Создание приёма"
+        title="Создание приема"
         fields={fieldsWithOptions}
         buttonText="Создать"
         onSubmit={handleCreate}
-        isLoading={isCreating}
         hasDefaultValue={false}
       />
 
-      {/* EDIT */}
       <EntityModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
-        title="Редактирование приёма"
+        title="Редактирование приема"
         fields={fieldsWithOptions}
-        defaultValues={selectedAppointment}
+        defaultValues={selectedAppointment || undefined}
         buttonText="Сохранить изменения"
         onSubmit={handleEdit}
         hasDefaultValue

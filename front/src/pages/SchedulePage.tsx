@@ -1,592 +1,276 @@
-import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import type { BadgeProps, CalendarProps } from 'antd';
-import { Badge, Calendar, ConfigProvider, Card, Tag, List, Alert, Space, Typography, Button, Modal } from 'antd';
-import type { Dayjs } from 'dayjs';
+import {
+  Button,
+  Calendar,
+  Card,
+  ConfigProvider,
+  Empty,
+  Modal,
+  Segmented,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+} from 'antd';
+import type { CalendarProps } from 'antd';
 import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import 'dayjs/locale/ru';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import ruRU from 'antd/es/locale/ru_RU';
+
+import { useGetAppointmentsQuery } from '../store/services/AppointmentsApi';
 import TemplatePage from './TemplatePage';
-import { CalendarOutlined, ClockCircleOutlined, UserOutlined, MedicineBoxOutlined, PhoneOutlined } from '@ant-design/icons';
 
 dayjs.locale('ru');
 
-// Интерфейсы на основе вашей структуры данных
-interface IAppointment {
+const { Text } = Typography;
+
+type ScheduleMode = 'week' | 'month';
+
+type ScheduleAppointment = {
   id: number;
   patientId: number;
   doctorId: number;
-  serviceId: number;
+  serviceId?: number;
   visitDate: string;
   createdAt: string;
   status: string;
-}
-
-interface IPatient {
-  id: number;
-  name: string;
-  surname: string;
-  phone_number?: string;
-  [key: string]: any;
-}
-
-interface IPersonal {
-  id: number;
-  name: string;
-  surname: string;
-  specialization?: string;
-  [key: string]: any;
-}
-
-interface IService {
-  id: number;
-  name: string;
-  duration?: number;
-  price?: number;
-  [key: string]: any;
-}
-
-// Тип для Redux store
-interface RootState {
-  appointments: {
-    appointmentsList: IAppointment[];
-    loading?: boolean;
-    error?: string | null;
+  patient?: {
+    id: number;
+    name: string;
+    surname: string;
+    patronymic?: string;
+    phoneNumber?: string;
   };
-  patients: {
-    patientsList: IPatient[];
+  doctor?: {
+    id: number;
+    name: string;
+    surname: string;
+    patronymic?: string;
   };
-  personals: {
-    personalsList: IPersonal[];
+  service?: {
+    id: number;
+    name: string;
+    duration: number;
+    price: number;
   };
-  services: {
-    servicesList: IService[];
-  };
-}
+};
 
-const SchedulePage: React.FC = () => {
-  // Получаем данные из Redux store (аналогично AppintmentList)
-  const appointments = useSelector((store: RootState) => store.appointments.appointmentsList);
-  const patients = useSelector((store: RootState) => store.patients.patientsList);
-  const personals = useSelector((store: RootState) => store.personals.personalsList);
-  const services = useSelector((store: RootState) => store.services.servicesList);
-  
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-  const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+const statusView: Record<string, { label: string; color: string }> = {
+  planned: { label: 'План', color: 'blue' },
+  done: { label: 'Готово', color: 'green' },
+  cancelled: { label: 'Отмена', color: 'red' },
+  canceled: { label: 'Отмена', color: 'red' },
+};
 
-  // Функции для безопасного получения данных по ID
-  const getPatientById = (patientId: number): IPatient => {
-    const patient = patients[patientId];
-    return patient || { id: patientId, name: 'Неизвестно', surname: '', phone_number: '' };
-  };
+const fullName = (person?: { name?: string; surname?: string; patronymic?: string }) =>
+  [person?.surname, person?.name, person?.patronymic].filter(Boolean).join(' ') || 'Не указан';
 
-  const getPersonalById = (doctorId: number): IPersonal => {
-    const personal = personals[doctorId];
-    return personal || { id: doctorId, name: 'Неизвестно', surname: '' };
-  };
+const sameDay = (appointment: ScheduleAppointment, date: Dayjs) =>
+  dayjs(appointment.visitDate).format('YYYY-MM-DD') === date.format('YYYY-MM-DD');
 
-  const getServiceById = (serviceId: number): IService => {
-    const service = services[serviceId];
-    return service || { id: serviceId, name: 'Не указана' };
-  };
+const AppointmentCard = ({
+  appointment,
+  onOpen,
+}: {
+  appointment: ScheduleAppointment;
+  onOpen: (appointment: ScheduleAppointment) => void;
+}) => {
+  const status = statusView[appointment.status] || { label: appointment.status || '-', color: 'default' };
 
-  // Получаем статус для Badge
-  const getStatusType = (status: string): BadgeProps['status'] => {
-    switch (status?.toLowerCase()) {
-      case 'confirmed':
-      case 'подтверждено':
-        return 'success';
-      case 'pending':
-      case 'ожидание':
-        return 'warning';
-      case 'cancelled':
-      case 'отменено':
-        return 'error';
-      case 'completed':
-      case 'завершено':
-        return 'default';
-      default:
-        return 'processing';
-    }
-  };
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(appointment)}
+      className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50"
+    >
+      <Space direction="vertical" size={2} style={{ width: '100%' }}>
+        <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+          <Text strong>{dayjs(appointment.visitDate).format('HH:mm')}</Text>
+          <Tag color={status.color} style={{ marginRight: 0 }}>
+            {status.label}
+          </Tag>
+        </Space>
+        <Text>{fullName(appointment.patient)}</Text>
+        <Text type="secondary">{appointment.service?.name || 'Без услуги'}</Text>
+      </Space>
+    </button>
+  );
+};
 
-  // Получаем цвет для Tag
-  const getStatusColor = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'confirmed':
-      case 'подтверждено':
-        return 'green';
-      case 'pending':
-      case 'ожидание':
-        return 'orange';
-      case 'cancelled':
-      case 'отменено':
-        return 'red';
-      case 'completed':
-      case 'завершено':
-        return 'blue';
-      default:
-        return 'default';
-    }
-  };
+const SchedulePage = () => {
+  const { data, isLoading } = useGetAppointmentsQuery();
+  const [mode, setMode] = useState<ScheduleMode>('week');
+  const [anchorDate, setAnchorDate] = useState(dayjs());
+  const [selectedAppointment, setSelectedAppointment] = useState<ScheduleAppointment | null>(null);
 
-  // Получаем русское название статуса
-  const getStatusText = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'confirmed':
-        return 'Подтверждено';
-      case 'pending':
-        return 'Ожидание';
-      case 'cancelled':
-        return 'Отменено';
-      case 'completed':
-        return 'Завершено';
-      default:
-        return status || 'Неизвестно';
-    }
-  };
+  const appointments = (data?.data?.allAppointments || []) as ScheduleAppointment[];
 
-  // Получаем записи для конкретной даты (как в документации)
-  const getListData = (value: Dayjs) => {
-    const dateString = value.format('YYYY-MM-DD');
-    const dateAppointments = appointments.filter(appointment => 
-      dayjs(appointment.visitDate).format('YYYY-MM-DD') === dateString
-    );
+  const weekDays = useMemo(() => {
+    const monday = anchorDate.startOf('day').subtract((anchorDate.day() + 6) % 7, 'day');
+    return Array.from({ length: 7 }, (_, index) => monday.add(index, 'day'));
+  }, [anchorDate]);
 
-    // Преобразуем записи в формат для отображения в календаре
-    return dateAppointments.map(appointment => {
-      const patient = getPatientById(appointment.patientId);
-      const doctor = getPersonalById(appointment.doctorId);
-      
-      return {
-        type: getStatusType(appointment.status) as string,
-        content: `${patient.name} ${patient.surname} - ${dayjs(appointment.visitDate).format('HH:mm')}`,
-        appointment: appointment // сохраняем ссылку на оригинальную запись
-      };
-    });
-  };
+  const weekAppointments = useMemo(
+    () =>
+      weekDays.map((day) => ({
+        day,
+        appointments: appointments
+          .filter((appointment) => sameDay(appointment, day))
+          .sort((a, b) => dayjs(a.visitDate).valueOf() - dayjs(b.visitDate).valueOf()),
+      })),
+    [appointments, weekDays],
+  );
 
-  // Статистика по месяцам
-  const getMonthData = (value: Dayjs) => {
-    return appointments.filter(appointment => {
-      const appointmentDate = dayjs(appointment.visitDate);
-      return appointmentDate.month() === value.month() && 
-             appointmentDate.year() === value.year();
-    }).length;
-  };
+  const selectedStatus = selectedAppointment
+    ? statusView[selectedAppointment.status] || { label: selectedAppointment.status, color: 'default' }
+    : null;
 
-  // Обработчик клика по записи
-  const handleAppointmentClick = (appointment: IAppointment) => {
-    setSelectedAppointment(appointment);
-    setIsModalVisible(true);
-  };
+  const dateCellRender = (date: Dayjs) => {
+    const dayAppointments = appointments.filter((appointment) => sameDay(appointment, date)).slice(0, 3);
 
-  // Рендер ячейки календаря (как в документации)
-  const dateCellRender = (value: Dayjs) => {
-    const listData = getListData(value);
-    
-    if (listData.length === 0) {
-      return null;
-    }
+    if (dayAppointments.length === 0) return null;
 
     return (
-      <ul className="events p-1">
-        {listData.slice(0, 3).map((item, index) => (
-          <li 
-            key={`${item.content}-${index}`} 
-            className="mb-1 cursor-pointer hover:bg-gray-50 rounded px-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (item.appointment) {
-                handleAppointmentClick(item.appointment);
-              }
+      <Space direction="vertical" size={4} style={{ width: '100%' }}>
+        {dayAppointments.map((appointment) => (
+          <button
+            key={appointment.id}
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedAppointment(appointment);
             }}
+            className="w-full truncate rounded bg-blue-50 px-2 py-1 text-left text-xs text-blue-900"
           >
-            <Badge 
-              status={item.type as BadgeProps['status']} 
-              text={
-                <span className="text-xs truncate">
-                  {item.content}
-                </span>
-              } 
-            />
-          </li>
+            {dayjs(appointment.visitDate).format('HH:mm')} {fullName(appointment.patient)}
+          </button>
         ))}
-        {listData.length > 3 && (
-          <li className="text-xs text-gray-500 text-center mt-1">
-            +{listData.length - 3} ещё
-          </li>
-        )}
-      </ul>
+      </Space>
     );
-  };
-
-  // Рендер месяца
-  const monthCellRender = (value: Dayjs) => {
-    const num = getMonthData(value);
-    return num ? (
-      <div className="notes-month">
-        <section className="text-2xl font-bold">{num} sadsd</section>
-        <span className="text-xs text-gray-500">записей</span>
-      </div>
-    ) : null;
   };
 
   const cellRender: CalendarProps<Dayjs>['cellRender'] = (current, info) => {
     if (info.type === 'date') return dateCellRender(current);
-    if (info.type === 'month') return monthCellRender(current);
     return info.originNode;
   };
 
-  // Получаем записи для выбранной даты
-  const selectedDateAppointments = useMemo(() => {
-    return selectedDate ? appointments.filter(appointment => 
-      dayjs(appointment.visitDate).format('YYYY-MM-DD') === selectedDate.format('YYYY-MM-DD')
-    ) : [];
-  }, [selectedDate, appointments]);
-
-  // Статистика
-  const stats = useMemo(() => ({
-    total: appointments.length,
-    confirmed: appointments.filter(a => 
-      a.status?.toLowerCase() === 'confirmed' || a.status?.toLowerCase() === 'подтверждено'
-    ).length,
-    pending: appointments.filter(a => 
-      a.status?.toLowerCase() === 'pending' || a.status?.toLowerCase() === 'ожидание'
-    ).length,
-    cancelled: appointments.filter(a => 
-      a.status?.toLowerCase() === 'cancelled' || a.status?.toLowerCase() === 'отменено'
-    ).length,
-    today: appointments.filter(a => 
-      dayjs(a.visitDate).format('YYYY-MM-DD') === dayjs().format('YYYY-MM-DD')
-    ).length,
-    upcoming: appointments.filter(a => 
-      dayjs(a.visitDate).isAfter(dayjs()) && 
-      (a.status?.toLowerCase() === 'confirmed' || a.status?.toLowerCase() === 'подтверждено')
-    ).length,
-  }), [appointments]);
-
   return (
-    <TemplatePage title="Расписание" description="Просмотр и управление записями пациентов">
-      {/* Статистика */}
-      <div className="mb-6 shadow-sm pr-2">
-        <div className="flex flex-wrap gap-4 items-start">
-          <div className="text-center p-3 rounded-lg">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-sm text-gray-600">Всего записей</div>
-          </div>
-          <div className="text-center p-3 rounded-lg">
-            <div className="text-2xl font-bold">{stats.confirmed}</div>
-            <div className="text-sm text-gray-600">Подтверждено</div>
-          </div>
-          <div className="text-center p-3 rounded-lg">
-            <div className="text-2xl font-bold">{stats.pending}</div>
-            <div className="text-sm text-gray-600">Ожидание</div>
-          </div>
-          <div className="text-center p-3  rounded-lg">
-            <div className="text-2xl font-bold">{stats.cancelled}</div>
-            <div className="text-sm text-gray-600">Отменено</div>
-          </div>
-          <div className="text-center p-3 rounded-lg">
-            <div className="text-2xl font-bold">{stats.today}</div>
-            <div className="text-sm text-gray-600">Сегодня</div>
-          </div>
-          <div className="text-center p-3 rounded-lg">
-            <div className="text-2xl font-bold">{stats.upcoming}</div>
-            <div className="text-sm text-gray-600">Предстоящие</div>
-          </div>
-        </div>
-      </div>
+    <TemplatePage
+      title="Расписание"
+      description="Недельный и месячный вид приемов с пациентами, врачами и услугами"
+    >
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
+          <Segmented
+            value={mode}
+            onChange={(value) => setMode(value as ScheduleMode)}
+            options={[
+              { label: 'Неделя', value: 'week' },
+              { label: 'Месяц', value: 'month' },
+            ]}
+          />
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Календарь */}
-        <div className="lg:w-2/3">
+          <Space>
+            <Button onClick={() => setAnchorDate(anchorDate.subtract(1, mode))}>Назад</Button>
+            <Button onClick={() => setAnchorDate(dayjs())}>Сегодня</Button>
+            <Button onClick={() => setAnchorDate(anchorDate.add(1, mode))}>Вперед</Button>
+          </Space>
+        </Space>
+
+        {isLoading ? (
+          <Spin />
+        ) : mode === 'week' ? (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-7">
+            {weekAppointments.map(({ day, appointments: dayAppointments }) => {
+              const isToday = day.isSame(dayjs(), 'day');
+
+              return (
+                <Card
+                  key={day.format('YYYY-MM-DD')}
+                  size="small"
+                  title={
+                    <Space direction="vertical" size={0}>
+                      <Text strong>{day.format('dd')}</Text>
+                      <Text type={isToday ? undefined : 'secondary'}>
+                        {day.format('DD.MM')}
+                      </Text>
+                    </Space>
+                  }
+                  extra={
+                    dayAppointments.length > 0 ? (
+                      <Tag color={isToday ? 'blue' : 'default'}>{dayAppointments.length}</Tag>
+                    ) : null
+                  }
+                  className={isToday ? 'border-blue-300' : ''}
+                  bodyStyle={{ minHeight: 220, background: '#fafafa' }}
+                >
+                  {dayAppointments.length > 0 ? (
+                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      {dayAppointments.map((appointment) => (
+                        <AppointmentCard
+                          key={appointment.id}
+                          appointment={appointment}
+                          onOpen={setSelectedAppointment}
+                        />
+                      ))}
+                    </Space>
+                  ) : (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Нет приемов" />
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
           <ConfigProvider locale={ruRU}>
-            <Card 
-              title="Календарь записей" 
-              className="shadow-sm"
-              extra={
-                <Tag color="blue" icon={<CalendarOutlined />}>
-                  {selectedDate ? selectedDate.format('D MMMM YYYY') : 'Выберите дату'}
-                </Tag>
-              }
-            >
-              <Calendar 
+            <Card>
+              <Calendar
+                value={anchorDate}
+                onSelect={setAnchorDate}
                 cellRender={cellRender}
-                onSelect={setSelectedDate}
-                style={{ width: '100%' }}
               />
             </Card>
           </ConfigProvider>
-        </div>
-
-        {/* Записи на выбранную дату */}
-        <div className="lg:w-1/3">
-          <Card 
-            title={
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <ClockCircleOutlined />
-                  Записи на день
-                </span>
-                <Tag color="blue">{selectedDateAppointments.length}</Tag>
-              </div>
-            }
-            className="shadow-sm"
-          >
-            {selectedDateAppointments.length > 0 ? (
-              <List
-                dataSource={selectedDateAppointments}
-                renderItem={(appointment) => {
-                  const patient = getPatientById(appointment.patientId);
-                  const doctor = getPersonalById(appointment.doctorId);
-                  const service = getServiceById(appointment.serviceId);
-                  
-                  return (
-                    <List.Item 
-                      className="!px-0 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                      onClick={() => handleAppointmentClick(appointment)}
-                    >
-                      <div className="w-full p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <Typography.Text strong className="block">
-                              {patient.name} {patient.surname}
-                            </Typography.Text>
-                            <Typography.Text type="secondary" className="text-xs">
-                              Пациент
-                            </Typography.Text>
-                          </div>
-                          <Tag color={getStatusColor(appointment.status)}>
-                            {getStatusText(appointment.status)}
-                          </Tag>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <UserOutlined className="text-gray-400" />
-                            <span>
-                              <strong>Врач:</strong> {doctor.name} {doctor.surname}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 text-sm">
-                            <ClockCircleOutlined className="text-gray-400" />
-                            <span>
-                              <strong>Время:</strong> {dayjs(appointment.visitDate).format('HH:mm')}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 text-sm">
-                            <MedicineBoxOutlined className="text-gray-400" />
-                            <span>
-                              <strong>Услуга:</strong> {service.name}
-                            </span>
-                          </div>
-                          
-                          {patient.phone_number && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <PhoneOutlined className="text-gray-400" />
-                              <span>
-                                <strong>Тел:</strong> {patient.phone_number}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="mt-3 pt-2 border-t border-gray-100">
-                          <Typography.Text type="secondary" className="text-xs">
-                            Создано: {dayjs(appointment.createdAt).format('DD.MM.YYYY HH:mm')}
-                          </Typography.Text>
-                        </div>
-                      </div>
-                    </List.Item>
-                  );
-                }}
-              />
-            ) : (
-              <Alert
-                message="Нет записей"
-                description="На выбранную дату записей не найдено."
-                type="info"
-                showIcon
-                action={
-                  <Button size="small" type="primary">
-                    Создать запись
-                  </Button>
-                }
-              />
-            )}
-          </Card>
-
-          {/* Предстоящие записи */}
-          {stats.upcoming > 0 && (
-            <Card className="mt-6 shadow-sm" title="Ближайшие записи">
-              <List
-                dataSource={appointments
-                  .filter(a => 
-                    (a.status?.toLowerCase() === 'confirmed' || a.status?.toLowerCase() === 'подтверждено') &&
-                    dayjs(a.visitDate).isAfter(dayjs())
-                  )
-                  .sort((a, b) => new Date(a.visitDate).getTime() - new Date(b.visitDate).getTime())
-                  .slice(0, 3)
-                }
-                renderItem={(appointment) => {
-                  const patient = getPatientById(appointment.patientId);
-                  const doctor = getPersonalById(appointment.doctorId);
-                  
-                  return (
-                    <List.Item className="!px-0">
-                      <div className="w-full p-2 hover:bg-gray-50 rounded">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <Typography.Text strong className="block">
-                              {patient.name} {patient.surname}
-                            </Typography.Text>
-                            <Typography.Text type="secondary" className="text-xs">
-                              {doctor.name} {doctor.surname}
-                            </Typography.Text>
-                          </div>
-                          <div className="text-right">
-                            <Typography.Text strong className="block">
-                              {dayjs(appointment.visitDate).format('HH:mm')}
-                            </Typography.Text>
-                            <Typography.Text type="secondary" className="text-xs">
-                              {dayjs(appointment.visitDate).format('DD.MM')}
-                            </Typography.Text>
-                          </div>
-                        </div>
-                      </div>
-                    </List.Item>
-                  );
-                }}
-              />
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Модальное окно с деталями записи */}
-      <Modal
-        title="Детали записи"
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsModalVisible(false)}>
-            Закрыть
-          </Button>,
-          <Button key="edit" type="primary">
-            Редактировать
-          </Button>,
-          <Button key="cancel" danger>
-            Отменить запись
-          </Button>,
-        ]}
-        width={600}
-      >
-        {selectedAppointment && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Typography.Text type="secondary" className="block text-xs mb-1">
-                  Пациент
-                </Typography.Text>
-                <Typography.Text strong className="block text-lg">
-                  {getPatientById(selectedAppointment.patientId).name} {getPatientById(selectedAppointment.patientId).surname}
-                </Typography.Text>
-              </div>
-              
-              <div>
-                <Typography.Text type="secondary" className="block text-xs mb-1">
-                  Врач
-                </Typography.Text>
-                <Typography.Text strong className="block text-lg">
-                  {getPersonalById(selectedAppointment.doctorId).name} {getPersonalById(selectedAppointment.doctorId).surname}
-                </Typography.Text>
-              </div>
-              
-              <div>
-                <Typography.Text type="secondary" className="block text-xs mb-1">
-                  Дата и время
-                </Typography.Text>
-                <Typography.Text strong className="block">
-                  {dayjs(selectedAppointment.visitDate).format('DD.MM.YYYY HH:mm')}
-                </Typography.Text>
-              </div>
-              
-              <div>
-                <Typography.Text type="secondary" className="block text-xs mb-1">
-                  Статус
-                </Typography.Text>
-                <Tag color={getStatusColor(selectedAppointment.status)} className="text-sm py-1">
-                  {getStatusText(selectedAppointment.status)}
-                </Tag>
-              </div>
-              
-              <div>
-                <Typography.Text type="secondary" className="block text-xs mb-1">
-                  Услуга
-                </Typography.Text>
-                <Typography.Text strong className="block">
-                  {getServiceById(selectedAppointment.serviceId).name}
-                </Typography.Text>
-              </div>
-              
-              <div>
-                <Typography.Text type="secondary" className="block text-xs mb-1">
-                  ID записи
-                </Typography.Text>
-                <Typography.Text strong className="block">
-                  #{selectedAppointment.id}
-                </Typography.Text>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t">
-              <Typography.Text type="secondary" className="block text-xs mb-1">
-                Контакт пациента
-              </Typography.Text>
-              <Typography.Text strong className="block text-lg">
-                <PhoneOutlined className="mr-2" /> 
-                {getPatientById(selectedAppointment.patientId).phone_number || 'Не указан'}
-              </Typography.Text>
-            </div>
-            
-            <div>
-              <Typography.Text type="secondary" className="block text-xs mb-1">
-                Дата создания записи
-              </Typography.Text>
-              <Typography.Text>
-                {dayjs(selectedAppointment.createdAt).format('DD.MM.YYYY HH:mm:ss')}
-              </Typography.Text>
-            </div>
-          </div>
         )}
-      </Modal>
+      </Space>
 
-      {/* CSS стили для календаря (как в документации) */}
-      <style jsx>{`
-        .events {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-        }
-        .events .ant-badge-status {
-          width: 100%;
-          overflow: hidden;
-          font-size: 12px;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-        }
-        .notes-month {
-          text-align: center;
-          font-size: 28px;
-        }
-        .notes-month section {
-          font-size: 28px;
-        }
-      `}</style>
+      <Modal
+        open={Boolean(selectedAppointment)}
+        title="Прием"
+        footer={null}
+        onCancel={() => setSelectedAppointment(null)}
+      >
+        {selectedAppointment ? (
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+              <Text strong>{dayjs(selectedAppointment.visitDate).format('DD.MM.YYYY HH:mm')}</Text>
+              {selectedStatus ? <Tag color={selectedStatus.color}>{selectedStatus.label}</Tag> : null}
+            </Space>
+
+            <div>
+              <Text type="secondary">Пациент</Text>
+              <div>
+                <Link to={`/patients/${selectedAppointment.patientId}`}>
+                  {fullName(selectedAppointment.patient)}
+                </Link>
+              </div>
+              <Text type="secondary">{selectedAppointment.patient?.phoneNumber || 'Телефон не указан'}</Text>
+            </div>
+
+            <div>
+              <Text type="secondary">Врач</Text>
+              <div>{fullName(selectedAppointment.doctor)}</div>
+            </div>
+
+            <div>
+              <Text type="secondary">Услуга</Text>
+              <div>{selectedAppointment.service?.name || 'Не выбрана'}</div>
+            </div>
+          </Space>
+        ) : null}
+      </Modal>
     </TemplatePage>
   );
 };

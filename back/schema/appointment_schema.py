@@ -1,6 +1,5 @@
 import strawberry
 from typing import List, Optional
-from sqlalchemy.orm import Session
 from database import SessionLocal
 from models.appointment import Appointment
 from .base import QueryResult
@@ -22,6 +21,84 @@ class AppointmentType:
     created_at: str
     visit_date: str
     status: str
+
+
+@strawberry.type
+class AppointmentPatientType:
+    id: int
+    name: str
+    surname: str
+    patronymic: Optional[str]
+    phone_number: Optional[str]
+
+
+@strawberry.type
+class AppointmentDoctorType:
+    id: int
+    name: str
+    surname: str
+    patronymic: Optional[str]
+    role: str
+
+
+@strawberry.type
+class AppointmentServiceType:
+    id: int
+    name: str
+    duration: int
+    price: float
+
+
+@strawberry.type
+class AppointmentCardType:
+    id: int
+    patient_id: int
+    doctor_id: int
+    service_id: Optional[int]
+    created_at: str
+    visit_date: str
+    status: str
+    patient: Optional[AppointmentPatientType]
+    doctor: Optional[AppointmentDoctorType]
+    service: Optional[AppointmentServiceType]
+
+
+def serialize_appointment(appointment: Appointment) -> AppointmentCardType:
+    return AppointmentCardType(
+        id=appointment.id,
+        patient_id=appointment.patient_id,
+        doctor_id=appointment.doctor_id,
+        service_id=appointment.service_id,
+        created_at=appointment.created_at.isoformat(),
+        visit_date=appointment.visit_date.isoformat(),
+        status=appointment.status,
+        patient=AppointmentPatientType(
+            id=appointment.patient.id,
+            name=appointment.patient.name,
+            surname=appointment.patient.surname,
+            patronymic=appointment.patient.patronymic,
+            phone_number=appointment.patient.phone_number,
+        )
+        if appointment.patient
+        else None,
+        doctor=AppointmentDoctorType(
+            id=appointment.doctor.id,
+            name=appointment.doctor.name,
+            surname=appointment.doctor.surname,
+            patronymic=appointment.doctor.patronymic,
+            role=appointment.doctor.role,
+        )
+        if appointment.doctor
+        else None,
+        service=AppointmentServiceType(
+            id=appointment.service.id,
+            name=appointment.service.name,
+            duration=appointment.service.duration,
+            price=appointment.service.price,
+        )
+        if appointment.service
+        else None,
+    )
 
 @strawberry.type
 class AppointmentQuery:
@@ -45,7 +122,7 @@ class AppointmentQuery:
             db.close()
 
     @strawberry.field
-    def all_appointments(self, patient_id: Optional[int] = None, doctor_id: Optional[int] = None) -> List[AppointmentType]:
+    def all_appointments(self, patient_id: Optional[int] = None, doctor_id: Optional[int] = None) -> List[AppointmentCardType]:
         db = SessionLocal()
         try:
             query = db.query(Appointment)
@@ -54,18 +131,8 @@ class AppointmentQuery:
             if doctor_id:
                 query = query.filter(Appointment.doctor_id == doctor_id)
             
-            appointments = query.all()
-            return [
-                AppointmentType(
-                    id=a.id,
-                    patient_id=a.patient_id,
-                    doctor_id=a.doctor_id,
-                    service_id=a.service_id,
-                    created_at=a.created_at.isoformat(),
-                    visit_date=a.visit_date.isoformat(),
-                    status=a.status
-                ) for a in appointments
-            ]
+            appointments = query.order_by(Appointment.visit_date.asc()).all()
+            return [serialize_appointment(appointment) for appointment in appointments]
         finally:
             db.close()
 

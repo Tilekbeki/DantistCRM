@@ -17,10 +17,10 @@ interface ServiceInput {
   categoryId: number;
 }
 
-// interface Category {
-//     id: number;
-//     name: string;
-// }
+interface Category {
+  id: number;
+  name: string;
+}
 
 interface QueryResult {
   success: boolean;
@@ -39,7 +39,7 @@ export const serviceApi = createApi({
   }),
   tagTypes: ['Service'],
   endpoints: (build) => ({
-    getServices: build.query<{ data: { allServices: Service[] } }, void>({
+    getServices: build.query<{ data: { allServices: Service[]; allCategories: Category[] } }, void>({
       query: () => ({
         url: '',
         method: 'POST',

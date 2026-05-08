@@ -7,6 +7,22 @@ enum StatusEnum {
     Cancelled = "cancelled",
 }
 
+interface PersonSummary {
+  id: number;
+  name: string;
+  surname: string;
+  patronymic?: string;
+  role?: string;
+  phoneNumber?: string;
+}
+
+interface ServiceSummary {
+  id: number;
+  name: string;
+  duration: number;
+  price: number;
+}
+
 interface IAppointment {
   id: number;
   patientId: number;
@@ -15,6 +31,9 @@ interface IAppointment {
   visitDate: string;
   createdAt: string;
   status: StatusEnum;
+  patient?: PersonSummary;
+  doctor?: PersonSummary;
+  service?: ServiceSummary;
 }
 
 interface AppointmentInput {
@@ -52,14 +71,17 @@ export const appointmentApi = createApi({
           query: `
             query {
               allAppointments {
-                    id
-                    patientId
-                    doctorId
-                    serviceId
-                    createdAt
-                    visitDate
-                    status
-                }
+                id
+                patientId
+                doctorId
+                serviceId
+                createdAt
+                visitDate
+                status
+                patient { id name surname patronymic phoneNumber }
+                doctor { id name surname patronymic role }
+                service { id name duration price }
+              }
             }
           `,
         },
@@ -88,7 +110,7 @@ export const appointmentApi = createApi({
           variables: { id },
         },
       }),
-      providesTags: (result, error, id) => [{ type: 'Appointment', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Appointment', id }],
     }),
 
     createAppointment: build.mutation<{ data: { createAppointment: QueryResult } }, AppointmentInput>({
@@ -145,7 +167,7 @@ export const appointmentApi = createApi({
           },
         },
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Appointment', id }, 'Appointment'],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Appointment', id }, 'Appointment'],
     }),
 
     deleteAppointment: build.mutation<{ data: { deleteAppointment: QueryResult } }, number>({
